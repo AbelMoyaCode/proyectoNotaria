@@ -6,7 +6,7 @@ import android.view.ViewGroup
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import com.ampn.proyecto_notaria.R
-import com.ampn.proyecto_notaria.modelos.Tramite
+import com.ampn.proyecto_notaria.api.modelos.Tramite
 import java.text.NumberFormat
 import java.util.Locale
 

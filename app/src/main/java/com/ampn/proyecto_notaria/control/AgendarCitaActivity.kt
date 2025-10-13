@@ -9,11 +9,14 @@ import android.widget.ImageButton
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.ampn.proyecto_notaria.R
 import com.ampn.proyecto_notaria.adapters.AdaptadorHorarios
 import com.ampn.proyecto_notaria.api.utils.GestorSesion
+import com.ampn.proyecto_notaria.api.repositorios.CitasRepositorio
+import kotlinx.coroutines.launch
 import java.text.NumberFormat
 import java.text.SimpleDateFormat
 import java.util.Calendar
@@ -164,19 +167,36 @@ class AgendarCitaActivity : AppCompatActivity() {
 
     private fun cargarHorarios() {
         try {
-            // Mostrar todos los horarios (en producción, filtrar por disponibilidad desde API)
+            android.util.Log.d("AgendarCita", "cargarHorarios() llamado")
+            android.util.Log.d("AgendarCita", "textViewSinHorarios: $textViewSinHorarios")
+            android.util.Log.d("AgendarCita", "recyclerViewHorarios: $recyclerViewHorarios")
+
+            // Ocultar mensaje de "sin horarios" y mostrar RecyclerView
             textViewSinHorarios?.visibility = View.GONE
             recyclerViewHorarios?.visibility = View.VISIBLE
 
+            android.util.Log.d("AgendarCita", "Creando adaptador con ${horariosDisponibles.size} horarios")
+
             val adapter = AdaptadorHorarios(horariosDisponibles) { horario ->
+                android.util.Log.d("AgendarCita", "Horario seleccionado: $horario")
                 horarioSeleccionado = horario
                 textViewHorarioSeleccionado?.text = "Horario: $horario"
                 textViewHorarioSeleccionado?.visibility = View.VISIBLE
                 buttonConfirmar?.isEnabled = true
+
+                // Mostrar Toast al seleccionar horario
+                Toast.makeText(
+                    this,
+                    "✓ Horario seleccionado: $horario",
+                    Toast.LENGTH_SHORT
+                ).show()
             }
 
             recyclerViewHorarios?.adapter = adapter
+            android.util.Log.d("AgendarCita", "Adaptador asignado al RecyclerView")
+
         } catch (e: Exception) {
+            android.util.Log.e("AgendarCita", "Error en cargarHorarios: ${e.message}", e)
             Toast.makeText(this, "Error al cargar horarios: ${e.message}", Toast.LENGTH_SHORT).show()
             e.printStackTrace()
             // Si falla el adaptador, mostrar mensaje
@@ -195,17 +215,89 @@ class AgendarCitaActivity : AppCompatActivity() {
                 return@setOnClickListener
             }
 
-            // Navegar a confirmación SIN cerrar esta activity
-            val intent = Intent(this, ConfirmacionCitaActivity::class.java)
-            intent.putExtra("TRAMITE_CODIGO", tramiteCodigo)
-            intent.putExtra("TRAMITE_NOMBRE", tramiteNombre)
-            intent.putExtra("TRAMITE_DESCRIPCION", tramiteDescripcion)
-            intent.putExtra("TRAMITE_REQUISITOS", tramiteRequisitos)
-            intent.putExtra("TRAMITE_PRECIO", tramitePrecio)
-            intent.putExtra("FECHA", fechaSeleccionada)
-            intent.putExtra("HORARIO", horarioSeleccionado)
-            startActivity(intent)
-            // NO llamar finish() aquí - mantener la activity viva por si el usuario vuelve
+            // Guardar la cita directamente en la base de datos
+            agendarCitaEnBaseDatos()
+        }
+    }
+
+    /**
+     * Guarda la cita en la base de datos usando la API
+     */
+    private fun agendarCitaEnBaseDatos() {
+        if (fechaSeleccionada == null || horarioSeleccionado == null || tramiteCodigo == null) {
+            Toast.makeText(this, "Faltan datos para agendar la cita", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        // Deshabilitar botón mientras se procesa
+        buttonConfirmar.isEnabled = false
+        buttonConfirmar.text = "Guardando..."
+
+        lifecycleScope.launch {
+            try {
+                val usuarioId = gestorSesion.obtenerUsuarioId()
+                if (usuarioId == null) {
+                    Toast.makeText(
+                        this@AgendarCitaActivity,
+                        "No se pudo identificar al usuario",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                    buttonConfirmar.isEnabled = true
+                    buttonConfirmar.text = "Confirmar Cita"
+                    return@launch
+                }
+
+                val repositorio = CitasRepositorio()
+                val resultado = repositorio.crearCita(
+                    usuarioId = usuarioId.toInt(),
+                    tramiteCodigo = tramiteCodigo!!,
+                    fecha = fechaSeleccionada!!,
+                    hora = horarioSeleccionado!!
+                )
+
+                resultado.onSuccess { citaResponse ->
+                    // Formatear fecha y hora para el mensaje
+                    val formatoFecha = SimpleDateFormat("dd 'de' MMMM, yyyy", Locale("es", "ES"))
+                    val cal = Calendar.getInstance()
+                    val fechaParts = fechaSeleccionada!!.split("-")
+                    cal.set(fechaParts[0].toInt(), fechaParts[1].toInt() - 1, fechaParts[2].toInt())
+                    val fechaFormateada = formatoFecha.format(cal.time)
+
+                    Toast.makeText(
+                        this@AgendarCitaActivity,
+                        "✅ Cita Registrada\nFecha: $fechaFormateada\nHorario: $horarioSeleccionado",
+                        Toast.LENGTH_LONG
+                    ).show()
+
+                    // Navegar a la confirmación
+                    val intent = Intent(this@AgendarCitaActivity, ConfirmacionCitaActivity::class.java)
+                    intent.putExtra("TRAMITE_NOMBRE", tramiteNombre)
+                    intent.putExtra("FECHA", fechaSeleccionada)
+                    intent.putExtra("HORA", horarioSeleccionado)
+                    intent.putExtra("PRECIO", tramitePrecio)
+                    startActivity(intent)
+                    finish()
+                }
+
+                resultado.onFailure { error ->
+                    Toast.makeText(
+                        this@AgendarCitaActivity,
+                        "Error: ${error.message}",
+                        Toast.LENGTH_LONG
+                    ).show()
+                    buttonConfirmar.isEnabled = true
+                    buttonConfirmar.text = "Confirmar Cita"
+                }
+
+            } catch (e: Exception) {
+                Toast.makeText(
+                    this@AgendarCitaActivity,
+                    "Error al agendar: ${e.message}",
+                    Toast.LENGTH_LONG
+                ).show()
+                buttonConfirmar.isEnabled = true
+                buttonConfirmar.text = "Confirmar Cita"
+            }
         }
     }
 

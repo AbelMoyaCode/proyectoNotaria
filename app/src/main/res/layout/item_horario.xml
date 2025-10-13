@@ -2,21 +2,41 @@
 <com.google.android.material.card.MaterialCardView
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:layout_width="0dp"
+    android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:layout_margin="4dp"
     app:cardCornerRadius="8dp"
     app:cardElevation="2dp">
 
-    <TextView
-        android:id="@+id/textViewHorario"
+    <RelativeLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="09:00 AM"
-        android:textSize="14sp"
-        android:textColor="#212121"
-        android:gravity="center"
+        android:layout_height="60dp"
         android:padding="12dp"
-        android:background="?attr/selectableItemBackground"/>
-</com.google.android.material.card.MaterialCardView>
+        android:background="?attr/selectableItemBackground">
 
+        <TextView
+            android:id="@+id/textViewHorario"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_centerVertical="true"
+            android:text="09:00"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            android:textColor="#212121"
+            android:gravity="center"
+            android:paddingEnd="24dp"
+            android:paddingStart="0dp"/>
+
+        <ImageView
+            android:id="@+id/imageViewCheck"
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:layout_alignParentEnd="true"
+            android:layout_centerVertical="true"
+            android:src="@android:drawable/checkbox_on_background"
+            android:visibility="gone"
+            android:contentDescription="Seleccionado"
+            app:tint="#4CAF50"/>
+
+    </RelativeLayout>
+</com.google.android.material.card.MaterialCardView>

@@ -62,15 +62,18 @@ class ListadoTramitesActivity : AppCompatActivity() {
                 finish() // Cierra solo esta Activity, vuelve a la anterior
             }
 
-            // Configurar botón flotante para agendar cita
-            val fabAgendarCita = findViewById<com.google.android.material.floatingactionbutton.FloatingActionButton>(R.id.fabAgendarCita)
-            fabAgendarCita.setOnClickListener {
-                // Ir directo a la pantalla de agendar cita
-                startActivity(Intent(this, AgendarCitaActivity::class.java))
-            }
-
             // Cargar trámites
             cargarTramites()
+
+            // Mostrar Toast si viene de una cita confirmada
+            if (intent.getBooleanExtra("CITA_CREADA", false)) {
+                val tramiteNombre = intent.getStringExtra("TRAMITE_NOMBRE") ?: "su trámite"
+                Toast.makeText(
+                    this,
+                    "Cita del trámite \"$tramiteNombre\" agendada exitosamente",
+                    Toast.LENGTH_LONG
+                ).show()
+            }
 
         } catch (e: Exception) {
             Toast.makeText(this, "Error al inicializar la pantalla: ${e.message}", Toast.LENGTH_LONG).show()
@@ -172,6 +175,8 @@ class ListadoTramitesActivity : AppCompatActivity() {
         intent.putExtra("TRAMITE_DESCRIPCION", tramite.descripcion)
         intent.putExtra("TRAMITE_REQUISITOS", tramite.requisitos)
         intent.putExtra("TRAMITE_PRECIO", tramite.precio)
+        intent.putExtra("TRAMITE_DURACION", tramite.duracion_estimada)
+        intent.putExtra("TRAMITE_CATEGORIA", tramite.categoria)
         startActivity(intent)
     }
 

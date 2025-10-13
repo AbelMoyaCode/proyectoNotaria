@@ -13,7 +13,7 @@ router.post('/register', async (req, res) => {
         const { tipo_doc, nro_doc, nombres, apellidos, correo, password, direccion, telefono } = req.body;
 
         // Validaciones básicas
-        if (!tipo_doc || !nro_doc || !nombres || !apellidos || !correo || !password) {
+        if (!nro_doc || !nombres || !apellidos || !correo || !password) {
             return res.status(400).json({
                 success: false,
                 mensaje: 'Todos los campos obligatorios deben estar completos'
@@ -35,8 +35,8 @@ router.post('/register', async (req, res) => {
 
         // Verificar si el documento ya existe
         const docExiste = await query(
-            'SELECT id FROM usuarios WHERE tipo_doc = $1 AND nro_doc = $2',
-            [tipo_doc, nro_doc]
+            'SELECT id FROM usuarios WHERE nro_documento = $1',
+            [nro_doc]
         );
 
         if (docExiste.rows.length > 0) {
@@ -49,25 +49,46 @@ router.post('/register', async (req, res) => {
         // Hash de la contraseña
         const passwordHash = await bcrypt.hash(password, 10);
 
-        // Insertar usuario
+        // Separar apellidos en paterno y materno
+        const apellidosArray = apellidos.trim().split(' ');
+        const apellidoPaterno = apellidosArray[0] || '';
+        const apellidoMaterno = apellidosArray.slice(1).join(' ') || '';
+
+        // Insertar usuario con los nombres de columnas correctos
         const resultado = await query(
-            `INSERT INTO usuarios (tipo_doc, nro_doc, nombres, apellidos, correo, direccion, telefono, password_hash)
-             VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
-             RETURNING id, tipo_doc, nro_doc, nombres, apellidos, correo, direccion, telefono, estado, created_at`,
-            [tipo_doc, nro_doc, nombres, apellidos, correo, direccion, telefono, passwordHash]
+            `INSERT INTO usuarios (nro_documento, nombre, apellido_paterno, apellido_materno, fecha_nacimiento, correo, direccion, telefono, contrasena)
+             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+             RETURNING id, nro_documento, nombre, apellido_paterno, apellido_materno, correo, direccion, telefono, estado, fecha_registro`,
+            [nro_doc, nombres, apellidoPaterno, apellidoMaterno, '1990-01-01', correo, direccion, telefono, passwordHash]
         );
+
+        // Mapear los nombres de columnas al formato esperado por la app
+        const usuario = resultado.rows[0];
+        const respuesta = {
+            id: usuario.id,
+            tipo_doc: tipo_doc || 'DNI',
+            nro_doc: usuario.nro_documento,
+            nombres: usuario.nombre,
+            apellidos: `${usuario.apellido_paterno} ${usuario.apellido_materno}`.trim(),
+            correo: usuario.correo,
+            direccion: usuario.direccion,
+            telefono: usuario.telefono,
+            estado: usuario.estado,
+            created_at: usuario.fecha_registro
+        };
 
         res.status(201).json({
             success: true,
             mensaje: 'Usuario registrado exitosamente',
-            data: resultado.rows[0]
+            data: respuesta
         });
 
     } catch (error) {
         console.error('Error en registro:', error);
         res.status(500).json({
             success: false,
-            mensaje: 'Error al registrar usuario'
+            mensaje: 'Error al registrar usuario',
+            error: error.message
         });
     }
 });
@@ -88,9 +109,9 @@ router.post('/login', async (req, res) => {
             });
         }
 
-        // Buscar usuario
+        // Buscar usuario con los nombres de columnas correctos
         const resultado = await query(
-            'SELECT * FROM usuarios WHERE correo = $1',
+            'SELECT id, nro_documento, nombre, apellido_paterno, apellido_materno, correo, direccion, telefono, contrasena, estado, fecha_registro FROM usuarios WHERE correo = $1',
             [correo]
         );
 
@@ -103,8 +124,8 @@ router.post('/login', async (req, res) => {
 
         const usuario = resultado.rows[0];
 
-        // Verificar contraseña
-        const passwordValida = await bcrypt.compare(password, usuario.password_hash);
+        // Verificar contraseña (la columna se llama "contrasena" no "password_hash")
+        const passwordValida = await bcrypt.compare(password, usuario.contrasena);
 
         if (!passwordValida) {
             return res.status(401).json({
@@ -116,25 +137,37 @@ router.post('/login', async (req, res) => {
         // Generar token JWT
         const token = jwt.sign(
             { id: usuario.id, correo: usuario.correo },
-            process.env.JWT_SECRET,
+            process.env.JWT_SECRET || 'secret_key_default',
             { expiresIn: '7d' }
         );
 
-        // No enviar el hash de contraseña
-        delete usuario.password_hash;
+        // Mapear respuesta al formato esperado
+        const respuesta = {
+            id: usuario.id,
+            tipo_doc: 'DNI',
+            nro_doc: usuario.nro_documento,
+            nombres: usuario.nombre,
+            apellidos: `${usuario.apellido_paterno} ${usuario.apellido_materno}`.trim(),
+            correo: usuario.correo,
+            direccion: usuario.direccion,
+            telefono: usuario.telefono,
+            estado: usuario.estado,
+            created_at: usuario.fecha_registro
+        };
 
         res.json({
             success: true,
             mensaje: 'Login exitoso',
             token,
-            usuario
+            usuario: respuesta
         });
 
     } catch (error) {
         console.error('Error en login:', error);
         res.status(500).json({
             success: false,
-            mensaje: 'Error al iniciar sesión'
+            mensaje: 'Error al iniciar sesión',
+            error: error.message
         });
     }
 });

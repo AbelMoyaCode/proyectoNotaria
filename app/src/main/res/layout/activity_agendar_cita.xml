@@ -155,7 +155,9 @@
                     android:id="@+id/recyclerViewHorarios"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginBottom="8dp"/>
+                    android:minHeight="200dp"
+                    android:layout_marginBottom="8dp"
+                    android:visibility="gone"/>
 
                 <TextView
                     android:id="@+id/textViewSinHorarios"

@@ -1,7 +1,7 @@
 package com.ampn.proyecto_notaria
 
 import com.ampn.proyecto_notaria.modelos.Usuario
-import com.ampn.proyecto_notaria.modelos.Tramite
+import com.ampn.proyecto_notaria.api.modelos.Tramite
 import java.sql.Connection
 import java.sql.DriverManager
 import java.sql.SQLException

@@ -1,5 +1,6 @@
 package com.ampn.proyecto_notaria.control
 
+import android.graphics.Color
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -17,17 +18,41 @@ class TramitesAdapter(
 ) : RecyclerView.Adapter<TramitesAdapter.TramiteViewHolder>() {
 
     inner class TramiteViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
+        val categoria: TextView = itemView.findViewById(R.id.textViewCategoria)
         val nombre: TextView = itemView.findViewById(R.id.textViewNombreTramite)
         val descripcion: TextView = itemView.findViewById(R.id.textViewDescripcionBreve)
         val precio: TextView = itemView.findViewById(R.id.textViewPrecioTramite)
+        val duracion: TextView = itemView.findViewById(R.id.textViewDuracion)
+        val indicadorColor: View = itemView.findViewById(R.id.indicadorColor)
 
         fun vincular(tramite: Tramite) {
+            categoria.text = tramite.categoria ?: "General"
             nombre.text = tramite.nombre
             descripcion.text = tramite.descripcion
             precio.text = "S/ ${String.format("%.2f", tramite.precio)}"
+            duracion.text = tramite.duracion_estimada ?: "Consultar"
+
+            // Aplicar color según categoría
+            val colorCategoria = obtenerColorCategoria(tramite.categoria ?: "General")
+            indicadorColor.setBackgroundColor(Color.parseColor(colorCategoria))
+            categoria.setTextColor(Color.parseColor(colorCategoria))
 
             itemView.setOnClickListener {
                 alClickear(tramite)
+            }
+        }
+
+        private fun obtenerColorCategoria(categoria: String): String {
+            return when (categoria.lowercase()) {
+                "general" -> "#4CAF50"          // Verde
+                "notarial" -> "#2196F3"         // Azul
+                "legal" -> "#FF9800"            // Naranja
+                "documentación" -> "#9C27B0"    // Morado
+                "certificación" -> "#F44336"    // Rojo
+                "escrituras" -> "#00BCD4"       // Cyan
+                "testamentos" -> "#795548"      // Marrón
+                "poderes" -> "#607D8B"          // Gris azulado
+                else -> "#4CAF50"               // Verde por defecto
             }
         }
     }

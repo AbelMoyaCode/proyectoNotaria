@@ -6,28 +6,41 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
 /**
- * Repositorio para manejar operaciones de citas
+ * Repositorio para gestionar las operaciones de citas
  */
 class CitasRepositorio {
 
     private val service = RetrofitClient.citasService
 
     /**
-     * Crear/Reservar una nueva cita
+     * Crear una nueva cita
      */
-    suspend fun crearCita(solicitud: CrearCitaRequest): Result<CitaResponse> {
+    suspend fun crearCita(
+        usuarioId: Int,
+        tramiteCodigo: String,
+        fecha: String,
+        hora: String
+    ): Result<CitaResponse> {
         return withContext(Dispatchers.IO) {
             try {
-                val response = service.crearCita(solicitud)
+                val request = CrearCitaRequest(
+                    usuarioId = usuarioId.toString(),
+                    tramiteCodigo = tramiteCodigo,
+                    fecha = fecha,
+                    hora = hora
+                )
+
+                val response = service.crearCita(request)
+
                 if (response.isSuccessful && response.body()?.success == true) {
                     val cita = response.body()?.data
                     if (cita != null) {
                         Result.success(cita)
                     } else {
-                        Result.failure(Exception("Error al crear la cita"))
+                        Result.failure(Exception("No se recibió información de la cita"))
                     }
                 } else {
-                    val mensaje = response.body()?.mensaje ?: response.body()?.message ?: response.body()?.error ?: "Error al reservar la cita"
+                    val mensaje = response.body()?.mensaje ?: "Error al crear la cita"
                     Result.failure(Exception(mensaje))
                 }
             } catch (e: Exception) {
@@ -37,14 +50,16 @@ class CitasRepositorio {
     }
 
     /**
-     * Obtener citas del usuario
+     * Obtener todas las citas de un usuario
      */
-    suspend fun obtenerMisCitas(usuarioId: String): Result<List<CitaResponse>> {
+    suspend fun obtenerCitasUsuario(usuarioId: Int): Result<List<CitaResponse>> {
         return withContext(Dispatchers.IO) {
             try {
-                val response = service.obtenerMisCitas(usuarioId)
+                val response = service.obtenerMisCitas(usuarioId.toString())
+
                 if (response.isSuccessful && response.body()?.success == true) {
-                    Result.success(response.body()?.data ?: emptyList())
+                    val citas = response.body()?.data ?: emptyList()
+                    Result.success(citas)
                 } else {
                     Result.failure(Exception("Error al obtener citas"))
                 }
@@ -55,42 +70,14 @@ class CitasRepositorio {
     }
 
     /**
-     * Reprogramar una cita existente
-     */
-    suspend fun reprogramarCita(
-        citaId: String,
-        nuevaFecha: String,
-        nuevaHora: String
-    ): Result<CitaResponse> {
-        return withContext(Dispatchers.IO) {
-            try {
-                val request = ReprogramarCitaRequest(nuevaFecha, nuevaHora)
-                val response = service.reprogramarCita(citaId, request)
-                if (response.isSuccessful && response.body()?.success == true) {
-                    val cita = response.body()?.data
-                    if (cita != null) {
-                        Result.success(cita)
-                    } else {
-                        Result.failure(Exception("Error al reprogramar"))
-                    }
-                } else {
-                    val mensaje = response.body()?.mensaje ?: response.body()?.message ?: response.body()?.error ?: "No se pudo reprogramar la cita"
-                    Result.failure(Exception(mensaje))
-                }
-            } catch (e: Exception) {
-                Result.failure(e)
-            }
-        }
-    }
-
-    /**
      * Cancelar una cita
      */
-    suspend fun cancelarCita(citaId: String, motivo: String): Result<CitaResponse> {
+    suspend fun cancelarCita(citaId: Int, motivo: String): Result<CitaResponse> {
         return withContext(Dispatchers.IO) {
             try {
                 val request = CancelarCitaRequest(motivo)
-                val response = service.cancelarCita(citaId, request)
+                val response = service.cancelarCita(citaId.toString(), request)
+
                 if (response.isSuccessful && response.body()?.success == true) {
                     val cita = response.body()?.data
                     if (cita != null) {
@@ -99,8 +86,32 @@ class CitasRepositorio {
                         Result.failure(Exception("Error al cancelar"))
                     }
                 } else {
-                    val mensaje = response.body()?.mensaje ?: response.body()?.message ?: response.body()?.error ?: "No se pudo cancelar la cita"
-                    Result.failure(Exception(mensaje))
+                    Result.failure(Exception("Error al cancelar la cita"))
+                }
+            } catch (e: Exception) {
+                Result.failure(e)
+            }
+        }
+    }
+
+    /**
+     * Reprogramar una cita
+     */
+    suspend fun reprogramarCita(citaId: Int, fecha: String, hora: String): Result<CitaResponse> {
+        return withContext(Dispatchers.IO) {
+            try {
+                val request = ReprogramarCitaRequest(fecha, hora)
+                val response = service.reprogramarCita(citaId.toString(), request)
+
+                if (response.isSuccessful && response.body()?.success == true) {
+                    val cita = response.body()?.data
+                    if (cita != null) {
+                        Result.success(cita)
+                    } else {
+                        Result.failure(Exception("Error al reprogramar"))
+                    }
+                } else {
+                    Result.failure(Exception("Error al reprogramar la cita"))
                 }
             } catch (e: Exception) {
                 Result.failure(e)

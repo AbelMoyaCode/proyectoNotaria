@@ -9,7 +9,7 @@ const { query } = require('../config/database');
 router.get('/', async (req, res) => {
   try {
     const resultado = await query(
-      'SELECT codigo, nombre, descripcion, requisitos, precio, activo FROM tramites WHERE activo = true ORDER BY nombre'
+      'SELECT codigo, nombre, descripcion, requisitos, precio, duracion_estimada, categoria, activo FROM tramites WHERE activo = true ORDER BY categoria, nombre'
     );
 
     res.json({
@@ -43,11 +43,11 @@ router.get('/buscar', async (req, res) => {
     }
 
     const resultado = await query(
-      `SELECT codigo, nombre, descripcion, requisitos, precio, activo
+      `SELECT codigo, nombre, descripcion, requisitos, precio, duracion_estimada, categoria, activo
        FROM tramites
        WHERE activo = true
        AND (LOWER(nombre) LIKE LOWER($1) OR LOWER(descripcion) LIKE LOWER($1))
-       ORDER BY nombre`,
+       ORDER BY categoria, nombre`,
       [`%${q}%`]
     );
 
@@ -75,7 +75,7 @@ router.get('/:codigo', async (req, res) => {
     const { codigo } = req.params;
 
     const resultado = await query(
-      'SELECT codigo, nombre, descripcion, requisitos, precio, activo FROM tramites WHERE codigo = $1',
+      'SELECT codigo, nombre, descripcion, requisitos, precio, duracion_estimada, categoria, activo FROM tramites WHERE codigo = $1',
       [codigo]
     );
 

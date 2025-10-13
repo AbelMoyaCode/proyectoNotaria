@@ -1,6 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 const { testConnection } = require('./config/database');
+const { seedTramites } = require('./config/seed-tramites');
 require('dotenv').config();
 
 const app = express();
@@ -83,8 +84,10 @@ app.listen(PORT, async () => {
 
     try {
         await testConnection();
+        // COMENTADO: Los trámites ya están cargados desde el script SQL de PostgreSQL
+        // await seedTramites();
     } catch (error) {
-        console.error('❌ Error al conectar con PostgreSQL:', error.message);
+        console.error('❌ Error al inicializar:', error.message);
     }
 });
 

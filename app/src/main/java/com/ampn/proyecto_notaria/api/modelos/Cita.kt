@@ -56,7 +56,39 @@ data class CrearCitaRequest(
 )
 
 /**
- * Modelo para reprogramar una cita
+ * Respuesta al crear/obtener una cita
+ */
+data class CitaResponse(
+    @SerializedName("id")
+    val id: Int,
+
+    @SerializedName("tramite_usuario_id")
+    val tramiteUsuarioId: Int? = null,
+
+    @SerializedName("estado")
+    val estado: String,
+
+    @SerializedName("fecha")
+    val fecha: String,
+
+    @SerializedName("hora")
+    val hora: String,
+
+    @SerializedName("tramite_nombre")
+    val tramiteNombre: String,
+
+    @SerializedName("tramite_descripcion")
+    val tramiteDescripcion: String? = null,
+
+    @SerializedName("precio")
+    val precio: Double,
+
+    @SerializedName("creada_en")
+    val creadaEn: String? = null
+)
+
+/**
+ * Request para reprogramar una cita
  */
 data class ReprogramarCitaRequest(
     @SerializedName("fecha")
@@ -67,44 +99,9 @@ data class ReprogramarCitaRequest(
 )
 
 /**
- * Modelo para cancelar una cita
+ * Request para cancelar una cita
  */
 data class CancelarCitaRequest(
     @SerializedName("motivo")
     val motivo: String
-)
-
-/**
- * Respuesta del servidor al crear/modificar una cita
- */
-data class CitaResponse(
-    @SerializedName("id")
-    val id: String,
-
-    @SerializedName("tramite_usuario_id")
-    val tramiteUsuarioId: String,
-
-    @SerializedName("horario_id")
-    val horarioId: String,
-
-    @SerializedName("fecha")
-    val fecha: String,
-
-    @SerializedName("hora")
-    val hora: String,
-
-    @SerializedName("estado")
-    val estado: String,
-
-    @SerializedName("tramite")
-    val tramite: Tramite? = null,
-
-    @SerializedName("creada_en")
-    val creadaEn: String? = null,
-
-    @SerializedName("reprogramada_en")
-    val reprogramadaEn: String? = null,
-
-    @SerializedName("motivo_cancelacion")
-    val motivoCancelacion: String? = null
 )

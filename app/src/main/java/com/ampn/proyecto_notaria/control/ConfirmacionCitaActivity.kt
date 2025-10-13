@@ -8,7 +8,6 @@ import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import com.ampn.proyecto_notaria.R
-import com.ampn.proyecto_notaria.api.modelos.CrearCitaRequest
 import com.ampn.proyecto_notaria.api.repositorios.CitasRepositorio
 import com.ampn.proyecto_notaria.api.utils.GestorSesion
 import kotlinx.coroutines.launch
@@ -119,29 +118,50 @@ class ConfirmacionCitaActivity : AppCompatActivity() {
 
         lifecycleScope.launch {
             try {
-                // Crear objeto de solicitud
-                val solicitud = CrearCitaRequest(
-                    usuarioId = usuarioId,
+                // Convertir usuarioId a Int
+                val usuarioIdInt = usuarioId.toIntOrNull()
+
+                if (usuarioIdInt == null) {
+                    Toast.makeText(this@ConfirmacionCitaActivity, "Error: ID de usuario inválido", Toast.LENGTH_SHORT).show()
+                    buttonConfirmar.isEnabled = true
+                    buttonConfirmar.text = "Confirmar Cita"
+                    return@launch
+                }
+
+                val resultado = repositorioCitas.crearCita(
+                    usuarioId = usuarioIdInt,
                     tramiteCodigo = tramiteCodigo!!,
                     fecha = fecha!!,
                     hora = horario!!
                 )
 
-                val resultado = repositorioCitas.crearCita(solicitud)
-
                 resultado.onSuccess { citaCreada ->
+                    // Formatear fecha para el Toast
+                    val fechaFormateada = try {
+                        val formatoEntrada = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+                        val formatoSalida = SimpleDateFormat("dd/MM/yyyy", Locale("es", "ES"))
+                        val fechaDate = formatoEntrada.parse(fecha!!)
+                        fechaDate?.let { formatoSalida.format(it) } ?: fecha
+                    } catch (e: Exception) {
+                        fecha
+                    }
+
+                    // Mostrar Toast mejorado con fecha y horario
                     Toast.makeText(
                         this@ConfirmacionCitaActivity,
-                        "¡Cita agendada exitosamente!",
+                        "✅ Cita Registrada Exitosamente\n\n" +
+                                "📋 Trámite: $tramiteNombre\n" +
+                                "📅 Fecha: $fechaFormateada\n" +
+                                "🕐 Horario: $horario",
                         Toast.LENGTH_LONG
                     ).show()
 
-                    // Navegar a MainActivity sin cerrar el stack completo
-                    val intent = Intent(this@ConfirmacionCitaActivity, MainActivity::class.java)
-                    // NO usar FLAG_ACTIVITY_CLEAR_TOP para no cerrar todo
-                    intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
+                    // Navegar de regreso a la lista de trámites
+                    val intent = Intent(this@ConfirmacionCitaActivity, ListadoTramitesActivity::class.java)
+                    intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
                     startActivity(intent)
-                    // Cerrar solo esta pantalla de confirmación
+
+                    // Cerrar esta pantalla
                     finish()
                 }
 
@@ -151,10 +171,10 @@ class ConfirmacionCitaActivity : AppCompatActivity() {
 
                     val mensaje = when {
                         error.message?.contains("ya tiene una cita", ignoreCase = true) == true ->
-                            "Ya tienes una cita agendada para este día"
+                            "❌ Ya tienes una cita agendada para este día"
                         error.message?.contains("no disponible", ignoreCase = true) == true ->
-                            "Este horario ya no está disponible"
-                        else -> "Error al agendar cita: ${error.message}"
+                            "❌ Este horario ya no está disponible"
+                        else -> "❌ Error al agendar cita: ${error.message}"
                     }
 
                     Toast.makeText(this@ConfirmacionCitaActivity, mensaje, Toast.LENGTH_LONG).show()
@@ -164,7 +184,7 @@ class ConfirmacionCitaActivity : AppCompatActivity() {
                 buttonConfirmar.text = "Confirmar Cita"
                 Toast.makeText(
                     this@ConfirmacionCitaActivity,
-                    "Error inesperado: ${e.message}",
+                    "❌ Error inesperado: ${e.message}",
                     Toast.LENGTH_LONG
                 ).show()
             }
