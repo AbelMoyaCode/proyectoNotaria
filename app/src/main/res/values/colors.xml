@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Color principal del proyecto (VERDE) -->
+    <color name="colorPrimary">#1adb8e</color>
+    <color name="verde_principal">#00C896</color>
+    <color name="white">#FFFFFFFF</color>
+    <color name="black">#FF000000</color>
+
+    <!-- Colores de fondo -->
+    <color name="fondo_claro">#F5F5F5</color>
+    <color name="fondo_blanco">#FFFFFF</color>
+
+    <!-- Colores de texto -->
+    <color name="gris_texto">#757575</color>
+    <color name="gris_oscuro">#424242</color>
+    <color name="gris_claro">#E0E0E0</color>
+
+    <!-- Colores de estado -->
+    <color name="verde_oscuro">#1adb8e</color>
+    <color name="verde_claro">#4CAF50</color>
+    <color name="naranja">#FF9800</color>
+    <color name="rojo">#E53935</color>
+</resources>
