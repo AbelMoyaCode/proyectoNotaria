@@ -44,6 +44,7 @@ class AgendarCitaActivity : AppCompatActivity() {
 
     private var fechaSeleccionada: String? = null
     private var horarioSeleccionado: String? = null
+    private val citasRepositorio = CitasRepositorio()
 
     // Horarios disponibles (8:00 AM - 6:00 PM)
     private val horariosDisponibles = listOf(
@@ -229,9 +230,17 @@ class AgendarCitaActivity : AppCompatActivity() {
             return
         }
 
+        // Validar que no se agenden más de una cita por día
+        validarDisponibilidadYAgendar()
+    }
+
+    /**
+     * Valida que el usuario no tenga otra cita el mismo día antes de agendar
+     */
+    private fun validarDisponibilidadYAgendar() {
         // Deshabilitar botón mientras se procesa
         buttonConfirmar.isEnabled = false
-        buttonConfirmar.text = "Guardando..."
+        buttonConfirmar.text = "Validando..."
 
         lifecycleScope.launch {
             try {
@@ -247,57 +256,108 @@ class AgendarCitaActivity : AppCompatActivity() {
                     return@launch
                 }
 
-                val repositorio = CitasRepositorio()
-                val resultado = repositorio.crearCita(
-                    usuarioId = usuarioId.toInt(),
-                    tramiteCodigo = tramiteCodigo!!,
-                    fecha = fechaSeleccionada!!,
-                    hora = horarioSeleccionado!!
-                )
+                // Obtener todas las citas del usuario
+                val resultadoCitas = citasRepositorio.obtenerCitasUsuario(usuarioId.toInt())
 
-                resultado.onSuccess { citaResponse ->
-                    // Formatear fecha y hora para el mensaje
-                    val formatoFecha = SimpleDateFormat("dd 'de' MMMM, yyyy", Locale("es", "ES"))
-                    val cal = Calendar.getInstance()
-                    val fechaParts = fechaSeleccionada!!.split("-")
-                    cal.set(fechaParts[0].toInt(), fechaParts[1].toInt() - 1, fechaParts[2].toInt())
-                    val fechaFormateada = formatoFecha.format(cal.time)
+                resultadoCitas.onSuccess { citas ->
+                    // Verificar si ya tiene una cita para la fecha seleccionada
+                    val tieneCitaEnFecha = citas.any { cita ->
+                        cita.fecha_cita == fechaSeleccionada &&
+                        cita.estado in listOf("AGENDADO", "EN_PROCESO")
+                    }
 
-                    Toast.makeText(
-                        this@AgendarCitaActivity,
-                        "✅ Cita Registrada\nFecha: $fechaFormateada\nHorario: $horarioSeleccionado",
-                        Toast.LENGTH_LONG
-                    ).show()
+                    if (tieneCitaEnFecha) {
+                        Toast.makeText(
+                            this@AgendarCitaActivity,
+                            "⚠️ Ya tiene una cita agendada para esta fecha.\nSolo se permite una cita por día.",
+                            Toast.LENGTH_LONG
+                        ).show()
+                        buttonConfirmar.isEnabled = true
+                        buttonConfirmar.text = "Confirmar Cita"
+                        return@launch
+                    }
 
-                    // Navegar a la confirmación
-                    val intent = Intent(this@AgendarCitaActivity, ConfirmacionCitaActivity::class.java)
-                    intent.putExtra("TRAMITE_NOMBRE", tramiteNombre)
-                    intent.putExtra("FECHA", fechaSeleccionada)
-                    intent.putExtra("HORA", horarioSeleccionado)
-                    intent.putExtra("PRECIO", tramitePrecio)
-                    startActivity(intent)
-                    finish()
+                    // Si no tiene cita, proceder a crear la nueva
+                    crearNuevaCita(usuarioId.toInt())
                 }
 
-                resultado.onFailure { error ->
-                    Toast.makeText(
-                        this@AgendarCitaActivity,
-                        "Error: ${error.message}",
-                        Toast.LENGTH_LONG
-                    ).show()
-                    buttonConfirmar.isEnabled = true
-                    buttonConfirmar.text = "Confirmar Cita"
+                resultadoCitas.onFailure { error ->
+                    // Si falla la validación, permitir crear la cita de todos modos
+                    android.util.Log.w("AgendarCita", "No se pudo validar citas existentes: ${error.message}")
+                    val usuarioId = gestorSesion.obtenerUsuarioId()?.toInt()
+                    if (usuarioId != null) {
+                        crearNuevaCita(usuarioId)
+                    }
                 }
 
             } catch (e: Exception) {
                 Toast.makeText(
                     this@AgendarCitaActivity,
-                    "Error al agendar: ${e.message}",
+                    "Error al validar disponibilidad: ${e.message}",
                     Toast.LENGTH_LONG
                 ).show()
                 buttonConfirmar.isEnabled = true
                 buttonConfirmar.text = "Confirmar Cita"
             }
+        }
+    }
+
+    /**
+     * Crea una nueva cita en la base de datos
+     */
+    private suspend fun crearNuevaCita(usuarioId: Int) {
+        buttonConfirmar.text = "Guardando..."
+
+        try {
+            val resultado = citasRepositorio.crearCita(
+                usuarioId = usuarioId,
+                tramiteCodigo = tramiteCodigo!!,
+                fecha = fechaSeleccionada!!,
+                hora = horarioSeleccionado!!
+            )
+
+            resultado.onSuccess { citaResponse ->
+                // Formatear fecha y hora para el mensaje
+                val formatoFecha = SimpleDateFormat("dd 'de' MMMM, yyyy", Locale("es", "ES"))
+                val cal = Calendar.getInstance()
+                val fechaParts = fechaSeleccionada!!.split("-")
+                cal.set(fechaParts[0].toInt(), fechaParts[1].toInt() - 1, fechaParts[2].toInt())
+                val fechaFormateada = formatoFecha.format(cal.time)
+
+                Toast.makeText(
+                    this@AgendarCitaActivity,
+                    "✅ Cita Registrada\nFecha: $fechaFormateada\nHorario: $horarioSeleccionado",
+                    Toast.LENGTH_LONG
+                ).show()
+
+                // Navegar a la confirmación
+                val intent = Intent(this@AgendarCitaActivity, ConfirmacionCitaActivity::class.java)
+                intent.putExtra("TRAMITE_NOMBRE", tramiteNombre)
+                intent.putExtra("FECHA", fechaSeleccionada)
+                intent.putExtra("HORA", horarioSeleccionado)
+                intent.putExtra("PRECIO", tramitePrecio)
+                startActivity(intent)
+                finish()
+            }
+
+            resultado.onFailure { error ->
+                Toast.makeText(
+                    this@AgendarCitaActivity,
+                    "❌ Error al crear cita: ${error.message}",
+                    Toast.LENGTH_LONG
+                ).show()
+                buttonConfirmar.isEnabled = true
+                buttonConfirmar.text = "Confirmar Cita"
+            }
+
+        } catch (e: Exception) {
+            Toast.makeText(
+                this@AgendarCitaActivity,
+                "Error al agendar: ${e.message}",
+                Toast.LENGTH_LONG
+            ).show()
+            buttonConfirmar.isEnabled = true
+            buttonConfirmar.text = "Confirmar Cita"
         }
     }
 
