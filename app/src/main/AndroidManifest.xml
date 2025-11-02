@@ -49,6 +49,19 @@
             android:name=".control.ConfirmacionCitaActivity"
             android:parentActivityName=".control.AgendarCitaActivity"
             android:noHistory="false" />
+revi        <!-- Sprint 2: Nuevas Activities -->
+        <activity
+            android:name=".control.PerfilActivity"
+            android:parentActivityName=".control.MainActivity"
+            android:noHistory="false" />
+        <activity
+            android:name=".control.MisTramitesActivity"
+            android:parentActivityName=".control.MainActivity"
+            android:noHistory="false" />
+        <activity
+            android:name=".control.MisCitasActivity"
+            android:parentActivityName=".control.MainActivity"
+            android:noHistory="false" />
     </application>
 
 </manifest>

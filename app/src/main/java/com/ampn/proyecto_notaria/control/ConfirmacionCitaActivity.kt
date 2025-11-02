@@ -106,7 +106,7 @@ class ConfirmacionCitaActivity : AppCompatActivity() {
         val usuario = gestorSesion.obtenerUsuario()
         val usuarioId = usuario?.id
 
-        if (usuario == null || usuarioId.isNullOrBlank()) {
+        if (usuario == null || usuarioId == null) {
             Toast.makeText(this, "Error: Usuario no autenticado", Toast.LENGTH_SHORT).show()
             return
         }
@@ -118,18 +118,8 @@ class ConfirmacionCitaActivity : AppCompatActivity() {
 
         lifecycleScope.launch {
             try {
-                // Convertir usuarioId a Int
-                val usuarioIdInt = usuarioId.toIntOrNull()
-
-                if (usuarioIdInt == null) {
-                    Toast.makeText(this@ConfirmacionCitaActivity, "Error: ID de usuario inválido", Toast.LENGTH_SHORT).show()
-                    buttonConfirmar.isEnabled = true
-                    buttonConfirmar.text = "Confirmar Cita"
-                    return@launch
-                }
-
                 val resultado = repositorioCitas.crearCita(
-                    usuarioId = usuarioIdInt,
+                    usuarioId = usuarioId,
                     tramiteCodigo = tramiteCodigo!!,
                     fecha = fecha!!,
                     hora = horario!!

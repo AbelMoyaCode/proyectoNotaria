@@ -14,6 +14,7 @@
     <color name="gris_texto">#757575</color>
     <color name="gris_oscuro">#424242</color>
     <color name="gris_claro">#E0E0E0</color>
+    <color name="colorTextSecondary">#757575</color>
 
     <!-- Colores de estado -->
     <color name="verde_oscuro">#1adb8e</color>

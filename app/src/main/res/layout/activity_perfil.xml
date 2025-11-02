@@ -1,0 +1,395 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/white">
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:padding="16dp">
+
+        <!-- Header con botón volver -->
+        <ImageButton
+            android:id="@+id/buttonVolver"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:src="@android:drawable/ic_menu_close_clear_cancel"
+            android:contentDescription="Volver"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <TextView
+            android:id="@+id/textViewTitulo"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Mi Perfil"
+            android:textSize="24sp"
+            android:textStyle="bold"
+            android:textColor="@color/black"
+            app:layout_constraintTop_toTopOf="@id/buttonVolver"
+            app:layout_constraintBottom_toBottomOf="@id/buttonVolver"
+            app:layout_constraintStart_toEndOf="@id/buttonVolver"
+            android:layout_marginStart="16dp" />
+
+        <!-- Botón Editar -->
+        <ImageButton
+            android:id="@+id/buttonEditar"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:src="@android:drawable/ic_menu_edit"
+            android:contentDescription="Editar perfil"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <!-- Foto de perfil -->
+        <ImageView
+            android:id="@+id/imageViewPerfil"
+            android:layout_width="100dp"
+            android:layout_height="100dp"
+            android:layout_marginTop="32dp"
+            android:src="@drawable/ic_launcher_foreground"
+            android:background="@android:drawable/sym_def_app_icon"
+            android:contentDescription="Foto de perfil"
+            app:layout_constraintTop_toBottomOf="@id/buttonVolver"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent" />
+
+        <!-- Nombre completo del usuario -->
+        <TextView
+            android:id="@+id/textViewNombreCompleto"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:text="Nombre Completo"
+            android:textSize="22sp"
+            android:textStyle="bold"
+            android:textColor="@color/black"
+            app:layout_constraintTop_toBottomOf="@id/imageViewPerfil"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent" />
+
+        <!-- Email del usuario -->
+        <TextView
+            android:id="@+id/textViewEmail"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:text="email@ejemplo.com"
+            android:textSize="14sp"
+            android:textColor="@color/colorTextSecondary"
+            app:layout_constraintTop_toBottomOf="@id/textViewNombreCompleto"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent" />
+
+        <!-- Sección: Datos Personales (NO EDITABLES) -->
+        <TextView
+            android:id="@+id/labelDatosPersonales"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="32dp"
+            android:text="📋 Datos Personales (No editables)"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            android:textColor="@color/colorPrimary"
+            app:layout_constraintTop_toBottomOf="@id/textViewEmail"
+            app:layout_constraintStart_toStartOf="parent" />
+
+        <!-- DNI (NO EDITABLE) -->
+        <TextView
+            android:id="@+id/labelDni"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:text="DNI"
+            android:textSize="12sp"
+            android:textColor="@color/colorTextSecondary"
+            app:layout_constraintTop_toBottomOf="@id/labelDatosPersonales"
+            app:layout_constraintStart_toStartOf="parent" />
+
+        <TextView
+            android:id="@+id/textViewDni"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:text="12345678"
+            android:textSize="16sp"
+            android:textColor="@color/black"
+            android:padding="12dp"
+            android:background="@android:color/darker_gray"
+            app:layout_constraintTop_toBottomOf="@id/labelDni"
+            app:layout_constraintStart_toStartOf="parent" />
+
+        <!-- Nombre (NO EDITABLE) -->
+        <TextView
+            android:id="@+id/labelNombre"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:text="Nombre"
+            android:textSize="12sp"
+            android:textColor="@color/colorTextSecondary"
+            app:layout_constraintTop_toBottomOf="@id/textViewDni"
+            app:layout_constraintStart_toStartOf="parent" />
+
+        <TextView
+            android:id="@+id/textViewNombre"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:text="Juan"
+            android:textSize="16sp"
+            android:textColor="@color/black"
+            android:padding="12dp"
+            android:background="@android:color/darker_gray"
+            app:layout_constraintTop_toBottomOf="@id/labelNombre"
+            app:layout_constraintStart_toStartOf="parent" />
+
+        <!-- Apellidos (NO EDITABLE) -->
+        <TextView
+            android:id="@+id/labelApellidos"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:text="Apellidos"
+            android:textSize="12sp"
+            android:textColor="@color/colorTextSecondary"
+            app:layout_constraintTop_toBottomOf="@id/textViewNombre"
+            app:layout_constraintStart_toStartOf="parent" />
+
+        <TextView
+            android:id="@+id/textViewApellidos"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:text="García López"
+            android:textSize="16sp"
+            android:textColor="@color/black"
+            android:padding="12dp"
+            android:background="@android:color/darker_gray"
+            app:layout_constraintTop_toBottomOf="@id/labelApellidos"
+            app:layout_constraintStart_toStartOf="parent" />
+
+        <!-- Fecha de Nacimiento (NO EDITABLE) -->
+        <TextView
+            android:id="@+id/labelFechaNacimiento"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:text="Fecha de Nacimiento"
+            android:textSize="12sp"
+            android:textColor="@color/colorTextSecondary"
+            app:layout_constraintTop_toBottomOf="@id/textViewApellidos"
+            app:layout_constraintStart_toStartOf="parent" />
+
+        <TextView
+            android:id="@+id/textViewFechaNacimiento"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:text="01/01/1990"
+            android:textSize="16sp"
+            android:textColor="@color/black"
+            android:padding="12dp"
+            android:background="@android:color/darker_gray"
+            app:layout_constraintTop_toBottomOf="@id/labelFechaNacimiento"
+            app:layout_constraintStart_toStartOf="parent" />
+
+        <!-- Email (NO EDITABLE) -->
+        <TextView
+            android:id="@+id/labelEmailDetalle"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:text="Correo Electrónico"
+            android:textSize="12sp"
+            android:textColor="@color/colorTextSecondary"
+            app:layout_constraintTop_toBottomOf="@id/textViewFechaNacimiento"
+            app:layout_constraintStart_toStartOf="parent" />
+
+        <TextView
+            android:id="@+id/textViewEmailDetalle"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:text="email@ejemplo.com"
+            android:textSize="16sp"
+            android:textColor="@color/black"
+            android:padding="12dp"
+            android:background="@android:color/darker_gray"
+            app:layout_constraintTop_toBottomOf="@id/labelEmailDetalle"
+            app:layout_constraintStart_toStartOf="parent" />
+
+        <!-- Sección: Datos Editables -->
+        <TextView
+            android:id="@+id/labelDatosEditables"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="32dp"
+            android:text="✏️ Datos Editables"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            android:textColor="@color/colorPrimary"
+            app:layout_constraintTop_toBottomOf="@id/textViewEmailDetalle"
+            app:layout_constraintStart_toStartOf="parent" />
+
+        <!-- Campo Dirección (EDITABLE) -->
+        <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/textInputLayoutDireccion"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:hint="Dirección"
+            app:layout_constraintTop_toBottomOf="@id/labelDatosEditables"
+            app:layout_constraintStart_toStartOf="parent">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/editTextDireccion"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:inputType="textPostalAddress"
+                android:enabled="false" />
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <!-- Campo Teléfono (EDITABLE) -->
+        <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/textInputLayoutTelefono"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:hint="Teléfono"
+            app:layout_constraintTop_toBottomOf="@id/textInputLayoutDireccion"
+            app:layout_constraintStart_toStartOf="parent">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/editTextTelefono"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:inputType="phone"
+                android:enabled="false" />
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <!-- Botón Guardar Cambios (inicialmente oculto) -->
+        <Button
+            android:id="@+id/buttonGuardarCambios"
+            android:layout_width="match_parent"
+            android:layout_height="56dp"
+            android:layout_marginTop="24dp"
+            android:text="Guardar Cambios"
+            android:textColor="@color/white"
+            android:backgroundTint="@color/colorPrimary"
+            android:visibility="gone"
+            app:layout_constraintTop_toBottomOf="@id/textInputLayoutTelefono"
+            app:layout_constraintStart_toStartOf="parent" />
+
+        <!-- Sección: Opciones -->
+        <TextView
+            android:id="@+id/labelOpciones"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="32dp"
+            android:text="⚙️ Configuración"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            android:textColor="@color/colorPrimary"
+            app:layout_constraintTop_toBottomOf="@id/buttonGuardarCambios"
+            app:layout_constraintStart_toStartOf="parent" />
+
+        <!-- Opción: Preferencias de notificaciones -->
+        <LinearLayout
+            android:id="@+id/layoutNotificaciones"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:orientation="horizontal"
+            android:padding="12dp"
+            android:background="?attr/selectableItemBackground"
+            app:layout_constraintTop_toBottomOf="@id/labelOpciones"
+            app:layout_constraintStart_toStartOf="parent">
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Preferencias de notificaciones"
+                android:textSize="16sp"
+                android:textColor="@color/black" />
+
+            <ImageView
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:src="@android:drawable/ic_menu_more"
+                android:contentDescription="Ver más" />
+        </LinearLayout>
+
+        <!-- Opción: Términos y condiciones -->
+        <LinearLayout
+            android:id="@+id/layoutTerminos"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:padding="12dp"
+            android:background="?attr/selectableItemBackground"
+            app:layout_constraintTop_toBottomOf="@id/layoutNotificaciones"
+            app:layout_constraintStart_toStartOf="parent">
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Términos y condiciones"
+                android:textSize="16sp"
+                android:textColor="@color/black" />
+
+            <ImageView
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:src="@android:drawable/ic_menu_more"
+                android:contentDescription="Ver más" />
+        </LinearLayout>
+
+        <!-- Opción: Política de privacidad -->
+        <LinearLayout
+            android:id="@+id/layoutPrivacidad"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:padding="12dp"
+            android:background="?attr/selectableItemBackground"
+            app:layout_constraintTop_toBottomOf="@id/layoutTerminos"
+            app:layout_constraintStart_toStartOf="parent">
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Política de privacidad"
+                android:textSize="16sp"
+                android:textColor="@color/black" />
+
+            <ImageView
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:src="@android:drawable/ic_menu_more"
+                android:contentDescription="Ver más" />
+        </LinearLayout>
+
+        <!-- Botón Cerrar Sesión -->
+        <Button
+            android:id="@+id/buttonCerrarSesion"
+            android:layout_width="match_parent"
+            android:layout_height="56dp"
+            android:layout_marginTop="32dp"
+            android:layout_marginBottom="32dp"
+            android:text="Cerrar sesión"
+            android:textColor="@color/white"
+            android:backgroundTint="@color/colorPrimary"
+            app:layout_constraintTop_toBottomOf="@id/layoutPrivacidad"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent" />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+</ScrollView>

@@ -3,23 +3,24 @@ package com.ampn.proyecto_notaria.api.modelos
 import com.google.gson.annotations.SerializedName
 
 /**
- * Modelo de datos para Usuario (sincronizado con la tabla usuarios en PostgreSQL)
+ * Modelo de Usuario que representa a un usuario registrado en el sistema
+ * Compatible con la base de datos PostgreSQL
  */
 data class Usuario(
     @SerializedName("id")
-    val id: String? = null,
+    val id: Int,
 
-    @SerializedName("tipo_doc")
-    val tipoDocumento: String,
-
-    @SerializedName("nro_doc")
-    val numeroDocumento: String,
+    @SerializedName("nroDocumento")
+    val nroDocumento: String,
 
     @SerializedName("nombres")
     val nombres: String,
 
-    @SerializedName("apellidos")
-    val apellidos: String,
+    @SerializedName("apellidoPaterno")
+    val apellidoPaterno: String,
+
+    @SerializedName("apellidoMaterno")
+    val apellidoMaterno: String,
 
     @SerializedName("correo")
     val correo: String,
@@ -30,69 +31,70 @@ data class Usuario(
     @SerializedName("telefono")
     val telefono: String? = null,
 
+    @SerializedName("fechaRegistro")
+    val fechaRegistro: String? = null,
+
     @SerializedName("estado")
-    val estado: String = "ACTIVO",
-
-    @SerializedName("password_hash")
-    val passwordHash: String? = null,
-
-    @SerializedName("created_at")
-    val creadoEn: String? = null,
-
-    @SerializedName("updated_at")
-    val actualizadoEn: String? = null
-)
+    val estado: String = "ACTIVO"
+) {
+    fun nombreCompleto(): String {
+        return "$nombres $apellidoPaterno $apellidoMaterno"
+    }
+}
 
 /**
- * Modelo para registro de usuario
+ * Request para registro de usuario
  */
 data class RegistroUsuarioRequest(
-    @SerializedName("tipo_doc")
-    val tipoDocumento: String,
+    @SerializedName("nro_documento")
+    val nroDocumento: String,
 
-    @SerializedName("nro_doc")
-    val numeroDocumento: String,
+    @SerializedName("nombre")
+    val nombre: String,
 
-    @SerializedName("nombres")
-    val nombres: String,
+    @SerializedName("apellido_paterno")
+    val apellidoPaterno: String,
 
-    @SerializedName("apellidos")
-    val apellidos: String,
+    @SerializedName("apellido_materno")
+    val apellidoMaterno: String,
+
+    @SerializedName("fecha_nacimiento")
+    val fechaNacimiento: String,
 
     @SerializedName("correo")
     val correo: String,
-
-    @SerializedName("password")
-    val password: String,
 
     @SerializedName("direccion")
     val direccion: String? = null,
 
     @SerializedName("telefono")
-    val telefono: String? = null
+    val telefono: String? = null,
+
+    @SerializedName("contrasena")
+    val contrasena: String
 )
 
 /**
- * Modelo para login de usuario
+ * Request para login
  */
 data class LoginRequest(
     @SerializedName("correo")
     val correo: String,
 
-    @SerializedName("password")
-    val password: String
+    @SerializedName("contrasena")
+    val contrasena: String
 )
 
 /**
- * Respuesta del login
+ * Response de login
  */
 data class LoginResponse(
     @SerializedName("token")
-    val token: String? = null,
+    val token: String,
 
     @SerializedName("usuario")
     val usuario: Usuario,
 
     @SerializedName("mensaje")
-    val mensaje: String
+    val mensaje: String? = null
 )

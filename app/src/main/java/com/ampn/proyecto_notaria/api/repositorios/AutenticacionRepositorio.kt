@@ -19,6 +19,7 @@ class AutenticacionRepositorio {
         return withContext(Dispatchers.IO) {
             try {
                 val response = service.registrarUsuario(request)
+
                 if (response.isSuccessful && response.body()?.success == true) {
                     val usuario = response.body()?.data
                     if (usuario != null) {
@@ -27,11 +28,24 @@ class AutenticacionRepositorio {
                         Result.failure(Exception("Usuario vacío en la respuesta"))
                     }
                 } else {
-                    val mensaje = response.body()?.mensaje ?: response.body()?.message ?: response.body()?.error ?: "Error desconocido"
+                    // Intentar obtener el mensaje de error de diferentes campos posibles
+                    val errorBody = response.errorBody()?.string()
+                    val mensaje = response.body()?.mensaje
+                        ?: response.body()?.message
+                        ?: response.body()?.error
+                        ?: errorBody
+                        ?: "Error desconocido (código ${response.code()})"
+
                     Result.failure(Exception(mensaje))
                 }
+            } catch (e: java.net.UnknownHostException) {
+                Result.failure(Exception("No se puede conectar al servidor. Verifica tu conexión a internet."))
+            } catch (e: java.net.SocketTimeoutException) {
+                Result.failure(Exception("Tiempo de espera agotado. Intenta de nuevo."))
+            } catch (e: java.net.ConnectException) {
+                Result.failure(Exception("No se puede conectar al servidor. Verifica que el backend esté ejecutándose."))
             } catch (e: Exception) {
-                Result.failure(e)
+                Result.failure(Exception("Error: ${e.message ?: "Error desconocido"}"))
             }
         }
     }
@@ -52,10 +66,15 @@ class AutenticacionRepositorio {
                         Result.failure(Exception("Respuesta vacía"))
                     }
                 } else {
-                    Result.failure(Exception("Credenciales incorrectas"))
+                    val errorMsg = when (response.code()) {
+                        401 -> "Credenciales incorrectas"
+                        400 -> "Datos incompletos"
+                        else -> "Error en el servidor: ${response.code()}"
+                    }
+                    Result.failure(Exception(errorMsg))
                 }
             } catch (e: Exception) {
-                Result.failure(e)
+                Result.failure(Exception("Error de conexión: ${e.message}"))
             }
         }
     }

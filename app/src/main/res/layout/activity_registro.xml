@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/white"
@@ -80,23 +81,35 @@
             android:hint="Dirección"
             android:textColorHint="@color/colorPrimary" />
 
-        <EditText
-            android:id="@+id/editTextContrasena"
+        <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/textInputLayoutPassword"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginBottom="8dp"
             android:hint="Contraseña"
-            android:inputType="textPassword"
-            android:textColorHint="@color/colorPrimary" />
+            app:endIconMode="password_toggle">
 
-        <EditText
-            android:id="@+id/editTextRepetirContrasena"
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/editTextContrasena"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:inputType="textPassword" />
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/textInputLayoutRepeatPassword"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginBottom="16dp"
             android:hint="Repetir contraseña"
-            android:inputType="textPassword"
-            android:textColorHint="@color/colorPrimary" />
+            app:endIconMode="password_toggle">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/editTextRepetirContrasena"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:inputType="textPassword" />
+        </com.google.android.material.textfield.TextInputLayout>
 
         <Button
             android:id="@+id/buttonRegistrar"

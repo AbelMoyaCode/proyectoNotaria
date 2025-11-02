@@ -3,20 +3,14 @@ package com.ampn.proyecto_notaria.api.modelos
 import com.google.gson.annotations.SerializedName
 
 /**
- * Modelo de datos para Notificación
+ * Modelo para notificaciones del sistema
  */
 data class Notificacion(
     @SerializedName("id")
-    val id: String,
-
-    @SerializedName("usuario_id")
-    val usuarioId: String,
-
-    @SerializedName("tramite_usuario_id")
-    val tramiteUsuarioId: String? = null,
+    val id: Int,
 
     @SerializedName("tipo")
-    val tipo: String,
+    val tipo: String, // "CONFIRMACION", "REPROGRAMACION", "RECORDATORIO", "CANCELACION"
 
     @SerializedName("titulo")
     val titulo: String,
@@ -27,15 +21,27 @@ data class Notificacion(
     @SerializedName("fecha")
     val fecha: String,
 
-    @SerializedName("leido")
-    val leido: Boolean = false
-)
+    @SerializedName("leida")
+    val leida: Boolean = false,
 
-/**
- * Modelo para marcar notificación como leída
- */
-data class MarcarLeidaRequest(
-    @SerializedName("notificacion_id")
-    val notificacionId: String
-)
+    @SerializedName("cita_id")
+    val citaId: Int? = null
+) {
+    companion object {
+        const val TIPO_CONFIRMACION = "CONFIRMACION"
+        const val TIPO_REPROGRAMACION = "REPROGRAMACION"
+        const val TIPO_RECORDATORIO = "RECORDATORIO"
+        const val TIPO_CANCELACION = "CANCELACION"
+    }
+
+    fun getIcono(): String {
+        return when (tipo) {
+            TIPO_CONFIRMACION -> "✅"
+            TIPO_REPROGRAMACION -> "🔄"
+            TIPO_RECORDATORIO -> "⏰"
+            TIPO_CANCELACION -> "❌"
+            else -> "📢"
+        }
+    }
+}
 

@@ -166,20 +166,22 @@ class AgendarCitaActivity : AppCompatActivity() {
         }
     }
 
+    /**
+     * Carga los horarios disponibles para la fecha seleccionada
+     * VALIDACIÓN: Muestra solo horarios del rango 8:00 - 18:00
+     */
     private fun cargarHorarios() {
         try {
-            android.util.Log.d("AgendarCita", "cargarHorarios() llamado")
-            android.util.Log.d("AgendarCita", "textViewSinHorarios: $textViewSinHorarios")
-            android.util.Log.d("AgendarCita", "recyclerViewHorarios: $recyclerViewHorarios")
+            android.util.Log.d("AgendarCita", "✅ VALIDACIÓN: Cargando horarios disponibles para fecha: $fechaSeleccionada")
 
             // Ocultar mensaje de "sin horarios" y mostrar RecyclerView
             textViewSinHorarios?.visibility = View.GONE
             recyclerViewHorarios?.visibility = View.VISIBLE
 
-            android.util.Log.d("AgendarCita", "Creando adaptador con ${horariosDisponibles.size} horarios")
+            android.util.Log.d("AgendarCita", "📋 Mostrando ${horariosDisponibles.size} horarios disponibles (8:00 - 18:00)")
 
             val adapter = AdaptadorHorarios(horariosDisponibles) { horario ->
-                android.util.Log.d("AgendarCita", "Horario seleccionado: $horario")
+                android.util.Log.d("AgendarCita", "✓ Usuario seleccionó horario: $horario para fecha: $fechaSeleccionada")
                 horarioSeleccionado = horario
                 textViewHorarioSeleccionado?.text = "Horario: $horario"
                 textViewHorarioSeleccionado?.visibility = View.VISIBLE
@@ -194,10 +196,10 @@ class AgendarCitaActivity : AppCompatActivity() {
             }
 
             recyclerViewHorarios?.adapter = adapter
-            android.util.Log.d("AgendarCita", "Adaptador asignado al RecyclerView")
+            android.util.Log.d("AgendarCita", "✅ Adaptador de horarios configurado correctamente")
 
         } catch (e: Exception) {
-            android.util.Log.e("AgendarCita", "Error en cargarHorarios: ${e.message}", e)
+            android.util.Log.e("AgendarCita", "❌ Error al cargar horarios: ${e.message}", e)
             Toast.makeText(this, "Error al cargar horarios: ${e.message}", Toast.LENGTH_SHORT).show()
             e.printStackTrace()
             // Si falla el adaptador, mostrar mensaje
@@ -212,9 +214,14 @@ class AgendarCitaActivity : AppCompatActivity() {
 
         buttonConfirmar.setOnClickListener {
             if (fechaSeleccionada == null || horarioSeleccionado == null) {
-                Toast.makeText(this, "Debe seleccionar fecha y horario", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, "⚠️ Debe seleccionar fecha y horario", Toast.LENGTH_SHORT).show()
                 return@setOnClickListener
             }
+
+            android.util.Log.d("AgendarCita", "🔄 Iniciando proceso de agendamiento...")
+            android.util.Log.d("AgendarCita", "   Fecha: $fechaSeleccionada")
+            android.util.Log.d("AgendarCita", "   Hora: $horarioSeleccionado")
+            android.util.Log.d("AgendarCita", "   Trámite: $tramiteNombre")
 
             // Guardar la cita directamente en la base de datos
             agendarCitaEnBaseDatos()
@@ -223,24 +230,31 @@ class AgendarCitaActivity : AppCompatActivity() {
 
     /**
      * Guarda la cita en la base de datos usando la API
+     * IMPLEMENTACIÓN: Agendamiento con selección de fecha/hora
      */
     private fun agendarCitaEnBaseDatos() {
         if (fechaSeleccionada == null || horarioSeleccionado == null || tramiteCodigo == null) {
-            Toast.makeText(this, "Faltan datos para agendar la cita", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, "❌ Faltan datos para agendar la cita", Toast.LENGTH_SHORT).show()
             return
         }
+
+        android.util.Log.d("AgendarCita", "🔍 VALIDACIÓN: Verificando disponibilidad antes de agendar...")
 
         // Validar que no se agenden más de una cita por día
         validarDisponibilidadYAgendar()
     }
 
     /**
+     * VALIDACIÓN DE DISPONIBILIDAD:
      * Valida que el usuario no tenga otra cita el mismo día antes de agendar
+     * Esta es una validación de negocio: 1 cita por día máximo
      */
     private fun validarDisponibilidadYAgendar() {
         // Deshabilitar botón mientras se procesa
         buttonConfirmar.isEnabled = false
         buttonConfirmar.text = "Validando..."
+
+        android.util.Log.d("AgendarCita", "🔎 Consultando citas existentes del usuario...")
 
         lifecycleScope.launch {
             try {
@@ -248,7 +262,7 @@ class AgendarCitaActivity : AppCompatActivity() {
                 if (usuarioId == null) {
                     Toast.makeText(
                         this@AgendarCitaActivity,
-                        "No se pudo identificar al usuario",
+                        "❌ No se pudo identificar al usuario",
                         Toast.LENGTH_SHORT
                     ).show()
                     buttonConfirmar.isEnabled = true
@@ -256,20 +270,26 @@ class AgendarCitaActivity : AppCompatActivity() {
                     return@launch
                 }
 
+                android.util.Log.d("AgendarCita", "👤 Usuario ID: $usuarioId")
+
                 // Obtener todas las citas del usuario
                 val resultadoCitas = citasRepositorio.obtenerCitasUsuario(usuarioId.toInt())
 
                 resultadoCitas.onSuccess { citas ->
+                    android.util.Log.d("AgendarCita", "📊 Usuario tiene ${citas.size} citas registradas")
+
                     // Verificar si ya tiene una cita para la fecha seleccionada
                     val tieneCitaEnFecha = citas.any { cita ->
-                        cita.fecha_cita == fechaSeleccionada &&
+                        cita.fecha == fechaSeleccionada &&
                         cita.estado in listOf("AGENDADO", "EN_PROCESO")
                     }
 
                     if (tieneCitaEnFecha) {
+                        android.util.Log.w("AgendarCita", "⚠️ VALIDACIÓN FALLIDA: Usuario ya tiene cita para $fechaSeleccionada")
+
                         Toast.makeText(
                             this@AgendarCitaActivity,
-                            "⚠️ Ya tiene una cita agendada para esta fecha.\nSolo se permite una cita por día.",
+                            "⚠️ Ya tiene una cita agendada para esta fecha.\n📅 Solo se permite una cita por día.",
                             Toast.LENGTH_LONG
                         ).show()
                         buttonConfirmar.isEnabled = true
@@ -277,13 +297,15 @@ class AgendarCitaActivity : AppCompatActivity() {
                         return@launch
                     }
 
+                    android.util.Log.d("AgendarCita", "✅ VALIDACIÓN OK: No hay conflictos de fecha")
+
                     // Si no tiene cita, proceder a crear la nueva
                     crearNuevaCita(usuarioId.toInt())
                 }
 
                 resultadoCitas.onFailure { error ->
                     // Si falla la validación, permitir crear la cita de todos modos
-                    android.util.Log.w("AgendarCita", "No se pudo validar citas existentes: ${error.message}")
+                    android.util.Log.w("AgendarCita", "⚠️ No se pudo validar citas existentes: ${error.message}")
                     val usuarioId = gestorSesion.obtenerUsuarioId()?.toInt()
                     if (usuarioId != null) {
                         crearNuevaCita(usuarioId)
@@ -291,9 +313,11 @@ class AgendarCitaActivity : AppCompatActivity() {
                 }
 
             } catch (e: Exception) {
+                android.util.Log.e("AgendarCita", "❌ Error al validar disponibilidad: ${e.message}", e)
+
                 Toast.makeText(
                     this@AgendarCitaActivity,
-                    "Error al validar disponibilidad: ${e.message}",
+                    "❌ Error al validar disponibilidad: ${e.message}",
                     Toast.LENGTH_LONG
                 ).show()
                 buttonConfirmar.isEnabled = true
@@ -303,10 +327,18 @@ class AgendarCitaActivity : AppCompatActivity() {
     }
 
     /**
+     * PRUEBA DE RESERVA:
      * Crea una nueva cita en la base de datos
+     * Valida: fecha, hora, usuario, trámite
      */
     private suspend fun crearNuevaCita(usuarioId: Int) {
         buttonConfirmar.text = "Guardando..."
+
+        android.util.Log.d("AgendarCita", "💾 Creando cita en la base de datos...")
+        android.util.Log.d("AgendarCita", "   Usuario: $usuarioId")
+        android.util.Log.d("AgendarCita", "   Trámite: $tramiteCodigo - $tramiteNombre")
+        android.util.Log.d("AgendarCita", "   Fecha: $fechaSeleccionada")
+        android.util.Log.d("AgendarCita", "   Hora: $horarioSeleccionado")
 
         try {
             val resultado = citasRepositorio.crearCita(
@@ -317,6 +349,10 @@ class AgendarCitaActivity : AppCompatActivity() {
             )
 
             resultado.onSuccess { citaResponse ->
+                android.util.Log.d("AgendarCita", "✅ CITA CREADA EXITOSAMENTE")
+                android.util.Log.d("AgendarCita", "   ID Cita: ${citaResponse.id}")
+                android.util.Log.d("AgendarCita", "   Estado: ${citaResponse.estado}")
+
                 // Formatear fecha y hora para el mensaje
                 val formatoFecha = SimpleDateFormat("dd 'de' MMMM, yyyy", Locale("es", "ES"))
                 val cal = Calendar.getInstance()
@@ -326,9 +362,11 @@ class AgendarCitaActivity : AppCompatActivity() {
 
                 Toast.makeText(
                     this@AgendarCitaActivity,
-                    "✅ Cita Registrada\nFecha: $fechaFormateada\nHorario: $horarioSeleccionado",
+                    "✅ Cita Registrada Exitosamente\n📅 Fecha: $fechaFormateada\n🕐 Horario: $horarioSeleccionado",
                     Toast.LENGTH_LONG
                 ).show()
+
+                android.util.Log.d("AgendarCita", "📲 Navegando a confirmación de cita...")
 
                 // Navegar a la confirmación
                 val intent = Intent(this@AgendarCitaActivity, ConfirmacionCitaActivity::class.java)
@@ -341,6 +379,8 @@ class AgendarCitaActivity : AppCompatActivity() {
             }
 
             resultado.onFailure { error ->
+                android.util.Log.e("AgendarCita", "❌ ERROR AL CREAR CITA: ${error.message}")
+
                 Toast.makeText(
                     this@AgendarCitaActivity,
                     "❌ Error al crear cita: ${error.message}",
@@ -351,9 +391,11 @@ class AgendarCitaActivity : AppCompatActivity() {
             }
 
         } catch (e: Exception) {
+            android.util.Log.e("AgendarCita", "❌ EXCEPCIÓN al crear cita: ${e.message}", e)
+
             Toast.makeText(
                 this@AgendarCitaActivity,
-                "Error al agendar: ${e.message}",
+                "❌ Error inesperado: ${e.message}",
                 Toast.LENGTH_LONG
             ).show()
             buttonConfirmar.isEnabled = true

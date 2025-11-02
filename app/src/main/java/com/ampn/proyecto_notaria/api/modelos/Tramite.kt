@@ -1,12 +1,15 @@
 package com.ampn.proyecto_notaria.api.modelos
 
 import com.google.gson.annotations.SerializedName
-import java.io.Serializable
 
 /**
- * Modelo de datos para Trámite (sincronizado con la tabla tramites en PostgreSQL)
+ * Modelo de Trámite que representa un trámite notarial disponible
+ * Compatible con la base de datos PostgreSQL
  */
 data class Tramite(
+    @SerializedName("id")
+    val id: Int,
+
     @SerializedName("codigo")
     val codigo: String,
 
@@ -17,17 +20,24 @@ data class Tramite(
     val descripcion: String,
 
     @SerializedName("requisitos")
-    val requisitos: String? = null,
+    val requisitos: String,
 
     @SerializedName("precio")
     val precio: Double,
 
     @SerializedName("duracion_estimada")
-    val duracion_estimada: String? = null,
+    val duracionEstimada: String? = null,
 
     @SerializedName("categoria")
     val categoria: String? = null,
 
+    @SerializedName("fecha_creacion")
+    val fechaCreacion: String? = null,
+
     @SerializedName("activo")
     val activo: Boolean = true
-) : Serializable
+) {
+    // Propiedad adicional para compatibilidad
+    val duracion_estimada: String? get() = duracionEstimada
+}
+

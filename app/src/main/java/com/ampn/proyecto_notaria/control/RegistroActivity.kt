@@ -26,6 +26,7 @@ class RegistroActivity : AppCompatActivity() {
         val editTextNombre = findViewById<EditText>(R.id.editTextNombre)
         val editTextApellidoPaterno = findViewById<EditText>(R.id.editTextApellidoPaterno)
         val editTextApellidoMaterno = findViewById<EditText>(R.id.editTextApellidoMaterno)
+        val editTextFechaNacimiento = findViewById<EditText>(R.id.editTextFechaNacimiento)
         val editTextCorreo = findViewById<EditText>(R.id.editTextCorreo)
         val editTextDireccion = findViewById<EditText>(R.id.editTextDireccion)
         val editTextContrasena = findViewById<EditText>(R.id.editTextContrasena)
@@ -57,6 +58,7 @@ class RegistroActivity : AppCompatActivity() {
             val nombre = editTextNombre.text.toString().trim()
             val apellidoPaterno = editTextApellidoPaterno.text.toString().trim()
             val apellidoMaterno = editTextApellidoMaterno.text.toString().trim()
+            val fechaNacimiento = editTextFechaNacimiento.text.toString().trim()
             val correo = editTextCorreo.text.toString().trim()
             val direccion = editTextDireccion.text.toString().trim()
             val contrasena = editTextContrasena.text.toString()
@@ -65,7 +67,7 @@ class RegistroActivity : AppCompatActivity() {
             // ========== VALIDACIONES ==========
 
             // Validar campos vacíos
-            if (listOf(nroDocumento, nombre, apellidoPaterno, apellidoMaterno, correo, contrasena).any { it.isBlank() }) {
+            if (listOf(nroDocumento, nombre, apellidoPaterno, apellidoMaterno, fechaNacimiento, correo, contrasena).any { it.isBlank() }) {
                 Toast.makeText(this, "Por favor, complete todos los campos obligatorios", Toast.LENGTH_SHORT).show()
                 return@setOnClickListener
             }
@@ -126,17 +128,15 @@ class RegistroActivity : AppCompatActivity() {
 
             // ========== FIN VALIDACIONES ==========
 
-            // Crear solicitud de registro
-            val nombres = nombre
-            val apellidos = "$apellidoPaterno $apellidoMaterno".trim()
-
+            // Crear solicitud de registro con los parámetros correctos
             val request = RegistroUsuarioRequest(
-                tipoDocumento = tipoDoc,
-                numeroDocumento = nroDocumento,
-                nombres = nombres,
-                apellidos = apellidos,
+                nroDocumento = nroDocumento,
+                nombre = nombre,
+                apellidoPaterno = apellidoPaterno,
+                apellidoMaterno = apellidoMaterno,
+                fechaNacimiento = fechaNacimiento,
                 correo = correo,
-                password = contrasena,
+                contrasena = contrasena,
                 direccion = direccion.ifBlank { null },
                 telefono = null
             )

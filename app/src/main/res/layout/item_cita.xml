@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_margin="8dp"
+    app:cardCornerRadius="12dp"
+    app:cardElevation="4dp">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="16dp">
+
+        <!-- Header con icono y nombre del trámite -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <ImageView
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:src="@android:drawable/ic_menu_edit"
+                android:background="@color/verde_claro"
+                android:padding="8dp"
+                android:contentDescription="Trámite" />
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:layout_marginStart="12dp"
+                android:orientation="vertical">
+
+                <TextView
+                    android:id="@+id/textViewNombreTramite"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Firma de Escrituras"
+                    android:textSize="16sp"
+                    android:textStyle="bold"
+                    android:textColor="@color/black" />
+
+                <TextView
+                    android:id="@+id/textViewNotaria"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Notaría Pública #153"
+                    android:textSize="12sp"
+                    android:textColor="@color/colorTextSecondary" />
+            </LinearLayout>
+        </LinearLayout>
+
+        <!-- Fecha y hora -->
+        <TextView
+            android:id="@+id/textViewFechaHora"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:text="15 de Julio, 10:00 AM"
+            android:textSize="14sp"
+            android:textColor="@color/black" />
+
+        <!-- Estado -->
+        <TextView
+            android:id="@+id/textViewEstado"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:text="Confirmada"
+            android:textSize="13sp"
+            android:textStyle="bold"
+            android:textColor="@color/colorPrimary"
+            android:paddingHorizontal="12dp"
+            android:paddingVertical="4dp"
+            android:background="@color/verde_claro" />
+
+        <!-- Botones de acción -->
+        <LinearLayout
+            android:id="@+id/layoutBotones"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:orientation="horizontal"
+            android:gravity="end">
+
+            <Button
+                android:id="@+id/buttonReprogramar"
+                android:layout_width="wrap_content"
+                android:layout_height="40dp"
+                android:text="Reprogramar"
+                android:textSize="12sp"
+                android:textColor="@color/colorPrimary"
+                android:backgroundTint="@color/verde_claro"
+                style="?attr/materialButtonOutlinedStyle" />
+
+            <Button
+                android:id="@+id/buttonCancelar"
+                android:layout_width="wrap_content"
+                android:layout_height="40dp"
+                android:layout_marginStart="8dp"
+                android:text="Cancelar"
+                android:textSize="12sp"
+                android:textColor="@color/colorTextSecondary"
+                android:backgroundTint="@android:color/transparent"
+                style="?attr/materialButtonOutlinedStyle" />
+        </LinearLayout>
+
+        <!-- Botón Ver Detalles (alternativa) -->
+        <Button
+            android:id="@+id/buttonVerDetalles"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:layout_marginTop="8dp"
+            android:text="Ver Detalles"
+            android:textColor="@color/white"
+            android:backgroundTint="@color/colorPrimary"
+            android:visibility="gone" />
+
+    </LinearLayout>
+</androidx.cardview.widget.CardView>

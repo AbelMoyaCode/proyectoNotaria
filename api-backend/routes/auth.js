@@ -10,10 +10,20 @@ const { query } = require('../config/database');
  */
 router.post('/register', async (req, res) => {
     try {
-        const { tipo_doc, nro_doc, nombres, apellidos, correo, password, direccion, telefono } = req.body;
+        const {
+            nro_documento,
+            nombre,
+            apellido_paterno,
+            apellido_materno,
+            fecha_nacimiento,
+            correo,
+            contrasena,
+            direccion,
+            telefono
+        } = req.body;
 
         // Validaciones básicas
-        if (!nro_doc || !nombres || !apellidos || !correo || !password) {
+        if (!nro_documento || !nombre || !apellido_paterno || !apellido_materno || !correo || !contrasena) {
             return res.status(400).json({
                 success: false,
                 mensaje: 'Todos los campos obligatorios deben estar completos'
@@ -36,7 +46,7 @@ router.post('/register', async (req, res) => {
         // Verificar si el documento ya existe
         const docExiste = await query(
             'SELECT id FROM usuarios WHERE nro_documento = $1',
-            [nro_doc]
+            [nro_documento]
         );
 
         if (docExiste.rows.length > 0) {
@@ -47,34 +57,29 @@ router.post('/register', async (req, res) => {
         }
 
         // Hash de la contraseña
-        const passwordHash = await bcrypt.hash(password, 10);
-
-        // Separar apellidos en paterno y materno
-        const apellidosArray = apellidos.trim().split(' ');
-        const apellidoPaterno = apellidosArray[0] || '';
-        const apellidoMaterno = apellidosArray.slice(1).join(' ') || '';
+        const passwordHash = await bcrypt.hash(contrasena, 10);
 
         // Insertar usuario con los nombres de columnas correctos
         const resultado = await query(
             `INSERT INTO usuarios (nro_documento, nombre, apellido_paterno, apellido_materno, fecha_nacimiento, correo, direccion, telefono, contrasena)
              VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
              RETURNING id, nro_documento, nombre, apellido_paterno, apellido_materno, correo, direccion, telefono, estado, fecha_registro`,
-            [nro_doc, nombres, apellidoPaterno, apellidoMaterno, '1990-01-01', correo, direccion, telefono, passwordHash]
+            [nro_documento, nombre, apellido_paterno, apellido_materno, fecha_nacimiento || '1990-01-01', correo, direccion, telefono, passwordHash]
         );
 
-        // Mapear los nombres de columnas al formato esperado por la app
+        // Formatear respuesta para el frontend
         const usuario = resultado.rows[0];
         const respuesta = {
             id: usuario.id,
-            tipo_doc: tipo_doc || 'DNI',
-            nro_doc: usuario.nro_documento,
+            nroDocumento: usuario.nro_documento,
             nombres: usuario.nombre,
-            apellidos: `${usuario.apellido_paterno} ${usuario.apellido_materno}`.trim(),
+            apellidoPaterno: usuario.apellido_paterno,
+            apellidoMaterno: usuario.apellido_materno,
             correo: usuario.correo,
             direccion: usuario.direccion,
             telefono: usuario.telefono,
             estado: usuario.estado,
-            created_at: usuario.fecha_registro
+            fechaRegistro: usuario.fecha_registro
         };
 
         res.status(201).json({
@@ -99,10 +104,13 @@ router.post('/register', async (req, res) => {
  */
 router.post('/login', async (req, res) => {
     try {
-        const { correo, password } = req.body;
+        const { correo, password, contrasena } = req.body;
+
+        // Aceptar tanto "password" como "contrasena"
+        const passwordFinal = password || contrasena;
 
         // Validaciones básicas
-        if (!correo || !password) {
+        if (!correo || !passwordFinal) {
             return res.status(400).json({
                 success: false,
                 mensaje: 'Correo y contraseña son obligatorios'
@@ -125,7 +133,7 @@ router.post('/login', async (req, res) => {
         const usuario = resultado.rows[0];
 
         // Verificar contraseña (la columna se llama "contrasena" no "password_hash")
-        const passwordValida = await bcrypt.compare(password, usuario.contrasena);
+        const passwordValida = await bcrypt.compare(passwordFinal, usuario.contrasena);
 
         if (!passwordValida) {
             return res.status(401).json({
@@ -141,25 +149,27 @@ router.post('/login', async (req, res) => {
             { expiresIn: '7d' }
         );
 
-        // Mapear respuesta al formato esperado
+        // Mapear respuesta al formato esperado por el frontend
         const respuesta = {
-            id: usuario.id,
-            tipo_doc: 'DNI',
-            nro_doc: usuario.nro_documento,
-            nombres: usuario.nombre,
-            apellidos: `${usuario.apellido_paterno} ${usuario.apellido_materno}`.trim(),
-            correo: usuario.correo,
-            direccion: usuario.direccion,
-            telefono: usuario.telefono,
-            estado: usuario.estado,
-            created_at: usuario.fecha_registro
+            token: token,
+            usuario: {
+                id: usuario.id,
+                nroDocumento: usuario.nro_documento,
+                nombres: usuario.nombre,
+                apellidoPaterno: usuario.apellido_paterno,
+                apellidoMaterno: usuario.apellido_materno,
+                correo: usuario.correo,
+                direccion: usuario.direccion,
+                telefono: usuario.telefono,
+                estado: usuario.estado,
+                fechaRegistro: usuario.fecha_registro
+            }
         };
 
         res.json({
             success: true,
             mensaje: 'Login exitoso',
-            token,
-            usuario: respuesta
+            ...respuesta
         });
 
     } catch (error) {

@@ -2,8 +2,8 @@ package com.ampn.proyecto_notaria.api.servicios
 
 import com.ampn.proyecto_notaria.api.modelos.ApiResponse
 import com.ampn.proyecto_notaria.api.modelos.Cita
-import com.ampn.proyecto_notaria.api.modelos.Tramite
 import com.ampn.proyecto_notaria.api.modelos.Usuario
+import com.ampn.proyecto_notaria.api.modelos.Tramite
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Response

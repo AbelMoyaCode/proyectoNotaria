@@ -11,8 +11,12 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import com.ampn.proyecto_notaria.R
-import com.ampn.proyecto_notaria.api.repositorios.CitaRepositorio
+import com.ampn.proyecto_notaria.adapters.AdaptadorNotificaciones
+import com.ampn.proyecto_notaria.api.modelos.Notificacion
+import com.ampn.proyecto_notaria.api.repositorios.CitasRepositorio
 import com.ampn.proyecto_notaria.api.utils.GestorSesion
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
@@ -25,8 +29,13 @@ import java.util.*
 class HomeFragment : Fragment() {
 
     private lateinit var gestorSesion: GestorSesion
-    private val citaRepositorio = CitaRepositorio()
+    private val citaRepositorio = CitasRepositorio()
     private val TAG = "HomeFragment"
+
+    // Notificaciones
+    private lateinit var recyclerNotificaciones: RecyclerView
+    private lateinit var contenedorNotificaciones: View
+    private lateinit var adaptadorNotificaciones: AdaptadorNotificaciones
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -51,6 +60,10 @@ class HomeFragment : Fragment() {
 
         // Configurar botones de acceso rápido
         configurarAccesosRapidos(view)
+
+        // Configurar notificaciones
+        configurarNotificaciones(view)
+        cargarNotificaciones()
     }
 
     private fun cargarProximaCita(view: View) {
@@ -69,42 +82,54 @@ class HomeFragment : Fragment() {
             try {
                 val resultado = citaRepositorio.obtenerCitasUsuario(usuarioId)
 
-                resultado.onSuccess { citas ->
-                    if (citas.isEmpty()) {
+                resultado.onSuccess { todasLasCitas ->
+                    // Filtrar SOLO las citas AGENDADAS (no canceladas, no finalizadas)
+                    val citasActivas = todasLasCitas.filter { cita ->
+                        cita.estado.uppercase() in listOf("AGENDADO", "CONFIRMADO", "PENDIENTE")
+                    }
+
+                    if (citasActivas.isEmpty()) {
+                        // NO hay citas próximas - Ocultar completamente la sección
                         contenedorCita?.visibility = View.GONE
-                        Log.d(TAG, "No hay citas agendadas para el usuario")
+                        Log.d(TAG, "❌ No hay citas activas para el usuario")
                         return@onSuccess
                     }
 
-                    // Buscar próxima cita agendada
-                    val citaProxima = citas
-                        .filter { it.estado.equals("AGENDADO", ignoreCase = true) }
-                        .minByOrNull { it.creadaEn ?: "" }
+                    // Buscar la cita MÁS PRÓXIMA (ordenar por fecha y tomar la primera)
+                    val citaProxima = citasActivas
+                        .sortedBy { it.fecha } // Ordenar por fecha ascendente
+                        .firstOrNull()
 
                     if (citaProxima != null && textoCita != null) {
                         contenedorCita?.visibility = View.VISIBLE
-                        textoCita.text = "Cita agendada para el ${formatearFecha(citaProxima.creadaEn ?: "")}"
 
+                        // Formatear la fecha y hora de la cita
+                        val fechaFormateada = "📅 ${formatearFecha(citaProxima.fecha)} a las ${citaProxima.hora}"
+
+                        textoCita.text = fechaFormateada
+
+                        Log.d(TAG, "✅ Próxima cita: ${citaProxima.tramiteNombre} - ${citaProxima.fecha} ${citaProxima.hora}")
+
+                        // Configurar botón Ver Detalles para navegar a MisCitasActivity
                         btnVerDetalles?.setOnClickListener {
-                            // Navegar a detalle de cita
-                            Toast.makeText(requireContext(), "Ver detalles de cita", Toast.LENGTH_SHORT).show()
+                            Log.d(TAG, "📄 Navegando a detalles de cita ID: ${citaProxima.id}")
+                            val intent = Intent(requireContext(), MisCitasActivity::class.java)
+                            intent.putExtra("CITA_ID", citaProxima.id)
+                            startActivity(intent)
                         }
                     } else {
                         contenedorCita?.visibility = View.GONE
-                        Log.d(TAG, "No se encontró cita próxima agendada")
+                        Log.d(TAG, "❌ No se pudo obtener la próxima cita")
                     }
                 }
 
                 resultado.onFailure { error ->
-                    Log.d(TAG, "No se pudieron cargar citas (puede ser normal si no hay citas): ${error.message}")
+                    Log.e(TAG, "❌ Error al cargar citas: ${error.message}")
                     contenedorCita?.visibility = View.GONE
-                    // No mostrar error al usuario si simplemente no hay citas
                 }
             } catch (e: Exception) {
-                Log.d(TAG, "Excepción al cargar próxima cita (puede ser normal): ${e.message}")
-                e.printStackTrace()
+                Log.e(TAG, "❌ Excepción al cargar próxima cita: ${e.message}", e)
                 contenedorCita?.visibility = View.GONE
-                // No mostrar error al usuario
             }
         }
     }
@@ -117,19 +142,123 @@ class HomeFragment : Fragment() {
 
         // Botón Mis Citas
         view.findViewById<View>(R.id.btnMisCitas).setOnClickListener {
-            Toast.makeText(requireContext(), "Mis citas - Próximamente", Toast.LENGTH_SHORT).show()
+            startActivity(Intent(requireContext(), MisCitasActivity::class.java))
         }
 
-        // Botón Perfil
+        // Botón Perfil - HU-04: Navegar a la pantalla de perfil
         view.findViewById<View>(R.id.btnPerfil).setOnClickListener {
-            Toast.makeText(requireContext(), "Perfil - Próximamente", Toast.LENGTH_SHORT).show()
+            startActivity(Intent(requireContext(), PerfilActivity::class.java))
         }
+    }
+
+    private fun configurarNotificaciones(view: View) {
+        contenedorNotificaciones = view.findViewById(R.id.contenedorNotificaciones)
+        recyclerNotificaciones = view.findViewById(R.id.recyclerViewNotificaciones)
+
+        recyclerNotificaciones.layoutManager = LinearLayoutManager(requireContext())
+        adaptadorNotificaciones = AdaptadorNotificaciones(emptyList()) { notificacion ->
+            // Al hacer clic en una notificación
+            if (notificacion.citaId != null) {
+                val intent = Intent(requireContext(), MisCitasActivity::class.java)
+                intent.putExtra("CITA_ID", notificacion.citaId)
+                startActivity(intent)
+            }
+        }
+        recyclerNotificaciones.adapter = adaptadorNotificaciones
+    }
+
+    private fun cargarNotificaciones() {
+        lifecycleScope.launch {
+            try {
+                val usuarioId = gestorSesion.obtenerUsuario()?.id ?: return@launch
+
+                // Obtener citas del usuario para generar notificaciones
+                val resultado = citaRepositorio.obtenerCitasUsuario(usuarioId)
+
+                resultado.onSuccess { citas ->
+                    val notificaciones = generarNotificacionesDesdeCitas(citas)
+
+                    if (notificaciones.isNotEmpty()) {
+                        contenedorNotificaciones.visibility = View.VISIBLE
+                        adaptadorNotificaciones.actualizarNotificaciones(notificaciones)
+                        Log.d(TAG, "✅ Notificaciones cargadas: ${notificaciones.size}")
+                    } else {
+                        contenedorNotificaciones.visibility = View.GONE
+                        Log.d(TAG, "No hay notificaciones para mostrar")
+                    }
+                }
+
+                resultado.onFailure {
+                    contenedorNotificaciones.visibility = View.GONE
+                }
+            } catch (e: Exception) {
+                Log.e(TAG, "Error al cargar notificaciones: ${e.message}")
+                contenedorNotificaciones.visibility = View.GONE
+            }
+        }
+    }
+
+    /**
+     * Genera notificaciones basadas en las citas del usuario
+     * NO incluye citas canceladas - solo se muestra Toast al cancelar
+     */
+    private fun generarNotificacionesDesdeCitas(citas: List<com.ampn.proyecto_notaria.api.modelos.CitaResponse>): List<Notificacion> {
+        val notificaciones = mutableListOf<Notificacion>()
+        val fechaActual = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date())
+
+        citas.take(5).forEachIndexed { index, cita ->
+            when (cita.estado.uppercase()) {
+                "AGENDADO" -> {
+                    // Notificación de confirmación
+                    notificaciones.add(
+                        Notificacion(
+                            id = index + 1,
+                            tipo = Notificacion.TIPO_CONFIRMACION,
+                            titulo = "Confirmación de cita",
+                            mensaje = "Tu cita para ${cita.tramiteNombre} ha sido confirmada",
+                            fecha = cita.creadaEn ?: fechaActual,
+                            leida = false,
+                            citaId = cita.id
+                        )
+                    )
+                }
+                "CONFIRMADO" -> {
+                    notificaciones.add(
+                        Notificacion(
+                            id = index + 1,
+                            tipo = Notificacion.TIPO_CONFIRMACION,
+                            titulo = "Cita confirmada",
+                            mensaje = "Tu cita para ${cita.tramiteNombre} está confirmada",
+                            fecha = cita.creadaEn ?: fechaActual,
+                            leida = false,
+                            citaId = cita.id
+                        )
+                    )
+                }
+                "REPROGRAMADO" -> {
+                    notificaciones.add(
+                        Notificacion(
+                            id = index + 1,
+                            tipo = Notificacion.TIPO_REPROGRAMACION,
+                            titulo = "Cita reprogramada",
+                            mensaje = "Tu cita para ${cita.tramiteNombre} ha sido reprogramada",
+                            fecha = cita.creadaEn ?: fechaActual,
+                            leida = false,
+                            citaId = cita.id
+                        )
+                    )
+                }
+                // CANCELADO ya NO genera notificación - solo Toast al momento de cancelar
+            }
+        }
+
+        return notificaciones.sortedByDescending { it.fecha }.take(3) // Mostrar solo las 3 más recientes
     }
 
     private fun formatearFecha(fecha: String): String {
         return try {
-            val formatoEntrada = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.getDefault())
-            val formatoSalida = SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault())
+            val formatoEntrada = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+            val formatoSalida = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
             val date = formatoEntrada.parse(fecha)
             formatoSalida.format(date ?: Date())
         } catch (e: Exception) {

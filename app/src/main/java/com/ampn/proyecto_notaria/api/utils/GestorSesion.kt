@@ -66,7 +66,7 @@ class GestorSesion(context: Context) {
      * Obtener ID del usuario autenticado
      */
     fun obtenerUsuarioId(): String? {
-        return obtenerUsuario()?.id
+        return obtenerUsuario()?.id?.toString()
     }
 
     /**
@@ -85,6 +85,14 @@ class GestorSesion(context: Context) {
             .remove(KEY_USUARIO)
             .putBoolean(KEY_IS_LOGGED_IN, false)
             .apply()
+    }
+
+    /**
+     * Invalidar sesión (alias de cerrarSesion para compatibilidad con diagramas)
+     * Alineado con diagrama HU-01 y HU-02
+     */
+    fun invalidarSesion() {
+        cerrarSesion()
     }
 
     /**

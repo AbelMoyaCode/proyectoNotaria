@@ -15,8 +15,9 @@ import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.ampn.proyecto_notaria.R
-import com.ampn.proyecto_notaria.api.repositorios.TramitesRepositorio
+import com.ampn.proyecto_notaria.adapters.AdaptadorTramites
 import com.ampn.proyecto_notaria.api.modelos.Tramite
+import com.ampn.proyecto_notaria.api.repositorios.TramitesRepositorio
 import kotlinx.coroutines.launch
 
 /**
@@ -26,7 +27,7 @@ import kotlinx.coroutines.launch
 class ListadoTramitesActivity : AppCompatActivity() {
 
     private lateinit var recyclerView: RecyclerView
-    private lateinit var tramiteAdapter: TramitesAdapter
+    private lateinit var tramiteAdapter: AdaptadorTramites
     private lateinit var progressBar: ProgressBar
     private lateinit var textViewSinResultados: TextView
     private lateinit var editTextBuscar: EditText
@@ -49,7 +50,7 @@ class ListadoTramitesActivity : AppCompatActivity() {
 
             // Configurar RecyclerView
             recyclerView.layoutManager = LinearLayoutManager(this)
-            tramiteAdapter = TramitesAdapter(emptyList()) { tramite ->
+            tramiteAdapter = AdaptadorTramites(emptyList()) { tramite ->
                 navegarADetalle(tramite)
             }
             recyclerView.adapter = tramiteAdapter
