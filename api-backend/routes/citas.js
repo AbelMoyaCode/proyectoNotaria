@@ -9,7 +9,7 @@ const { verificarToken } = require('../middleware/auth');
  *
  * VALIDACIONES IMPLEMENTADAS:
  * 1. Validar disponibilidad de horarios
- * 2. Verificar que no haya más de 1 cita por día por usuario
+ * 2. Verificar que el usuario NO tenga ya una cita en el MISMO HORARIO
  * 3. Crear horarios automáticamente si no existen
  *
  * PRUEBAS DE RESERVA:
@@ -33,17 +33,27 @@ router.post('/', async (req, res) => {
       console.log('❌ VALIDACIÓN FALLIDA: Faltan campos obligatorios');
       return res.status(400).json({
         success: false,
-        mensaje: 'Todos los campos son obligatorios (usuario_id, tramite_codigo, fecha, hora)'
+        mensaje: 'Por favor, complete todos los datos: fecha, hora y trámite'
+      });
+    }
+
+    // VALIDACIÓN: Permitir agendar para HOY o FUTURO (no fechas pasadas)
+    const fechaCita = new Date(fecha);
+    const hoy = new Date();
+    hoy.setHours(0, 0, 0, 0);
+
+    if (fechaCita < hoy) {
+      console.log('❌ VALIDACIÓN FALLIDA: Fecha pasada');
+      return res.status(400).json({
+        success: false,
+        mensaje: 'No se pueden agendar citas en fechas pasadas'
       });
     }
 
     await client.query('BEGIN');
     console.log('🔄 Transacción iniciada');
 
-    // ========================================
-    // VALIDACIÓN 1: DISPONIBILIDAD DE HORARIOS
     // Buscar o crear horario disponible automáticamente
-    // ========================================
     console.log('🔎 Buscando horario disponible...');
     let horario = await client.query(
       'SELECT id, disponible FROM horarios_disponibles WHERE fecha = $1 AND hora = $2',
@@ -53,7 +63,6 @@ router.post('/', async (req, res) => {
     let horarioId;
 
     if (horario.rows.length === 0) {
-      // Auto-crear el horario si no existe
       console.log('📝 Horario no existe, creando automáticamente...');
       const nuevoHorario = await client.query(
         `INSERT INTO horarios_disponibles (fecha, hora, disponible)
@@ -64,47 +73,50 @@ router.post('/', async (req, res) => {
       horarioId = nuevoHorario.rows[0].id;
       console.log('✅ Horario creado con ID:', horarioId);
     } else {
-      // Verificar que el horario esté disponible
-      console.log('📋 Horario encontrado, verificando disponibilidad...');
-      if (!horario.rows[0].disponible) {
-        await client.query('ROLLBACK');
-        console.log('❌ VALIDACIÓN FALLIDA: Horario ocupado');
-        return res.status(400).json({
-          success: false,
-          mensaje: 'Este horario ya está ocupado. Por favor, seleccione otro.'
-        });
-      }
       horarioId = horario.rows[0].id;
-      console.log('✅ Horario disponible con ID:', horarioId);
+      console.log('✅ Horario encontrado con ID:', horarioId);
     }
 
-    // ========================================
-    // VALIDACIÓN 2: 1 CITA POR DÍA MÁXIMO
-    // Verificar que el usuario no tenga otra cita el mismo día
-    // ========================================
-    console.log('🔎 Verificando citas existentes del usuario en la fecha...');
-    const citaExistente = await client.query(
-      `SELECT c.id FROM citas c
-       JOIN horarios_disponibles hd ON hd.id = c.horario_id
-       JOIN tramites_usuarios tu ON tu.id = c.tramite_usuario_id
-       WHERE tu.usuario_id = $1 AND hd.fecha = $2 AND c.estado IN ('AGENDADO', 'EN_PROCESO')`,
-      [usuario_id, fecha]
+    // VERIFICACIÓN PRINCIPAL: Verificar si el usuario ya tiene una cita ACTIVA en este horario
+    console.log('🔎 Verificando si el usuario ya tiene cita activa en este horario específico...');
+    const citaActivaUsuario = await client.query(
+      `SELECT c.id, c.estado FROM citas c
+       WHERE c.usuario_id = $1
+       AND c.horario_id = $2
+       AND c.estado IN ('AGENDADO', 'EN_PROCESO')`,
+      [usuario_id, horarioId]
     );
 
-    if (citaExistente.rows.length > 0) {
+    if (citaActivaUsuario.rows.length > 0) {
       await client.query('ROLLBACK');
-      console.log('❌ VALIDACIÓN FALLIDA: Usuario ya tiene cita para esta fecha');
+      console.log('❌ VALIDACIÓN FALLIDA: Usuario ya tiene cita activa para este horario');
       return res.status(400).json({
         success: false,
-        mensaje: 'Ya tiene una cita agendada para esta fecha. Solo se permite una cita por día.'
+        mensaje: 'Ya tiene una cita agendada para este horario. Seleccione un horario diferente.'
       });
     }
-    console.log('✅ Usuario no tiene citas en conflicto');
 
-    // ========================================
-    // PRUEBA DE RESERVA: CREAR CITA
-    // Crear tramite_usuario y cita en transacción atómica
-    // ========================================
+    // Verificar si el horario está ocupado por OTRO usuario
+    console.log('🔎 Verificando si el horario está ocupado por otro usuario...');
+    const citasActivas = await client.query(
+      `SELECT c.id FROM citas c
+       WHERE c.horario_id = $1
+       AND c.estado IN ('AGENDADO', 'EN_PROCESO')`,
+      [horarioId]
+    );
+
+    if (citasActivas.rows.length > 0) {
+      await client.query('ROLLBACK');
+      console.log('❌ VALIDACIÓN FALLIDA: Horario ocupado por otro usuario');
+      return res.status(400).json({
+        success: false,
+        mensaje: 'Este horario ya está ocupado. Por favor, seleccione otro horario disponible.'
+      });
+    }
+
+    console.log('✅ Horario disponible para agendar');
+
+    // Crear tramite_usuario
     console.log('💾 Creando tramite_usuario...');
     const tramiteUsuario = await client.query(
       `INSERT INTO tramites_usuarios (usuario_id, tramite_codigo, estado_general)
@@ -116,7 +128,7 @@ router.post('/', async (req, res) => {
     const tramiteUsuarioId = tramiteUsuario.rows[0].id;
     console.log('✅ Tramite_usuario creado con ID:', tramiteUsuarioId);
 
-    // Crear cita con todos los campos necesarios
+    // Crear cita
     console.log('💾 Creando cita...');
     const cita = await client.query(
       `INSERT INTO citas (usuario_id, tramite_id, fecha_cita, hora_cita, tramite_usuario_id, horario_id, estado)
@@ -170,7 +182,8 @@ router.post('/', async (req, res) => {
 
 /**
  * GET /api/citas/usuario/:usuarioId
- * Obtener todas las citas de un usuario
+ * Obtener todas las citas de un usuario (INCLUYENDO canceladas)
+ * Las citas canceladas aparecerán en "Pasadas" para que el usuario las elimine manualmente
  */
 router.get('/usuario/:usuarioId', async (req, res) => {
   try {
@@ -288,7 +301,7 @@ router.patch('/:id/reprogramar', async (req, res) => {
 
 /**
  * PATCH /api/citas/:id/cancelar
- * Cancelar una cita
+ * Cancelar una cita y LIBERAR el horario
  */
 router.patch('/:id/cancelar', async (req, res) => {
   const client = await require('../config/database').pool.connect();
@@ -299,9 +312,26 @@ router.patch('/:id/cancelar', async (req, res) => {
 
     await client.query('BEGIN');
 
+    // Obtener horario_id antes de cancelar
+    const citaActual = await client.query(
+      'SELECT horario_id, tramite_usuario_id FROM citas WHERE id = $1',
+      [id]
+    );
+
+    if (citaActual.rows.length === 0) {
+      await client.query('ROLLBACK');
+      return res.status(404).json({
+        success: false,
+        mensaje: 'Cita no encontrada'
+      });
+    }
+
+    const horarioId = citaActual.rows[0].horario_id;
+
+    // Cancelar la cita
     const cita = await client.query(
       `UPDATE citas
-       SET estado = 'CANCELADO', motivo_cancelacion = $1
+       SET estado = 'CANCELADO', motivo_cancelacion = $1, fecha_cancelacion = NOW()
        WHERE id = $2
        RETURNING *`,
       [motivo || 'Cancelado por el usuario', id]
@@ -311,15 +341,26 @@ router.patch('/:id/cancelar', async (req, res) => {
     await client.query(
       `UPDATE tramites_usuarios
        SET estado_general = 'CANCELADO'
-       WHERE id = (SELECT tramite_usuario_id FROM citas WHERE id = $1)`,
-      [id]
+       WHERE id = $1`,
+      [citaActual.rows[0].tramite_usuario_id]
     );
+
+    // ✅ LIBERAR el horario (marcarlo como disponible nuevamente)
+    if (horarioId) {
+      await client.query(
+        `UPDATE horarios_disponibles
+         SET disponible = TRUE
+         WHERE id = $1`,
+        [horarioId]
+      );
+      console.log('✅ Horario liberado:', horarioId);
+    }
 
     await client.query('COMMIT');
 
     res.json({
       success: true,
-      mensaje: 'Cita cancelada exitosamente',
+      mensaje: 'Cita cancelada exitosamente y horario liberado',
       data: cita.rows[0]
     });
 
@@ -327,14 +368,96 @@ router.patch('/:id/cancelar', async (req, res) => {
     await client.query('ROLLBACK');
     console.error('Error al cancelar:', error);
 
-    let mensaje = 'Error al cancelar la cita';
-    if (error.message.includes('anticipación')) {
-      mensaje = 'Se requiere al menos 1 día de anticipación para cancelar';
-    }
-
     res.status(400).json({
       success: false,
-      mensaje,
+      mensaje: 'Error al cancelar la cita',
+      error: error.message
+    });
+  } finally {
+    client.release();
+  }
+});
+
+/**
+ * DELETE /api/citas/:id
+ * Eliminar físicamente una cita y LIBERAR el horario
+ * Solo para citas CANCELADAS o FINALIZADAS
+ */
+router.delete('/:id', async (req, res) => {
+  const client = await require('../config/database').pool.connect();
+
+  try {
+    const { id } = req.params;
+
+    await client.query('BEGIN');
+
+    // Obtener datos de la cita antes de eliminar
+    const citaActual = await client.query(
+      'SELECT horario_id, tramite_usuario_id, estado FROM citas WHERE id = $1',
+      [id]
+    );
+
+    if (citaActual.rows.length === 0) {
+      await client.query('ROLLBACK');
+      return res.status(404).json({
+        success: false,
+        mensaje: 'Cita no encontrada'
+      });
+    }
+
+    const { horario_id, tramite_usuario_id, estado } = citaActual.rows[0];
+
+    // Solo permitir eliminar citas canceladas o finalizadas
+    if (!['CANCELADO', 'FINALIZADO'].includes(estado)) {
+      await client.query('ROLLBACK');
+      return res.status(400).json({
+        success: false,
+        mensaje: 'Solo se pueden eliminar citas canceladas o finalizadas'
+      });
+    }
+
+    console.log('🗑️ ELIMINANDO CITA:', id);
+
+    // ✅ LIBERAR el horario ANTES de eliminar
+    if (horario_id) {
+      await client.query(
+        `UPDATE horarios_disponibles
+         SET disponible = TRUE
+         WHERE id = $1`,
+        [horario_id]
+      );
+      console.log('✅ Horario liberado:', horario_id);
+    }
+
+    // Eliminar la cita físicamente
+    await client.query('DELETE FROM citas WHERE id = $1', [id]);
+    console.log('✅ Cita eliminada de la base de datos');
+
+    // Eliminar tramite_usuario si ya no tiene citas asociadas
+    const citasRestantes = await client.query(
+      'SELECT COUNT(*) as total FROM citas WHERE tramite_usuario_id = $1',
+      [tramite_usuario_id]
+    );
+
+    if (parseInt(citasRestantes.rows[0].total) === 0) {
+      await client.query('DELETE FROM tramites_usuarios WHERE id = $1', [tramite_usuario_id]);
+      console.log('✅ Tramite_usuario eliminado (sin citas asociadas)');
+    }
+
+    await client.query('COMMIT');
+
+    res.json({
+      success: true,
+      mensaje: 'Cita eliminada exitosamente y horario liberado'
+    });
+
+  } catch (error) {
+    await client.query('ROLLBACK');
+    console.error('❌ Error al eliminar cita:', error);
+
+    res.status(500).json({
+      success: false,
+      mensaje: 'Error al eliminar la cita',
       error: error.message
     });
   } finally {

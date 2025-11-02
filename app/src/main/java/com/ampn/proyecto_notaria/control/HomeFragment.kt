@@ -55,15 +55,20 @@ class HomeFragment : Fragment() {
         val usuario = gestorSesion.obtenerUsuario()
         textoBienvenida.text = "Bienvenido, ${usuario?.nombres ?: "Usuario"}"
 
-        // Cargar próxima cita
-        cargarProximaCita(view)
-
         // Configurar botones de acceso rápido
         configurarAccesosRapidos(view)
 
         // Configurar notificaciones
         configurarNotificaciones(view)
-        cargarNotificaciones()
+    }
+
+    override fun onResume() {
+        super.onResume()
+        // ACTUALIZAR automáticamente al volver a la pantalla
+        view?.let { v ->
+            cargarProximaCita(v)
+            cargarNotificaciones()
+        }
     }
 
     private fun cargarProximaCita(view: View) {
@@ -83,9 +88,12 @@ class HomeFragment : Fragment() {
                 val resultado = citaRepositorio.obtenerCitasUsuario(usuarioId)
 
                 resultado.onSuccess { todasLasCitas ->
-                    // Filtrar SOLO las citas AGENDADAS (no canceladas, no finalizadas)
+                    // Obtener SOLO citas futuras y activas (no canceladas ni finalizadas)
+                    val fechaHoy = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date())
+
                     val citasActivas = todasLasCitas.filter { cita ->
-                        cita.estado.uppercase() in listOf("AGENDADO", "CONFIRMADO", "PENDIENTE")
+                        cita.estado.uppercase() in listOf("AGENDADO", "CONFIRMADO", "PENDIENTE") &&
+                        cita.fecha >= fechaHoy
                     }
 
                     if (citasActivas.isEmpty()) {

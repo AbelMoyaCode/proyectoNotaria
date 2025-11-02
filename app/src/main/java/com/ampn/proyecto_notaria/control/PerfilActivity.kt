@@ -89,10 +89,10 @@ class PerfilActivity : AppCompatActivity() {
             textViewEmail.text = it.correo
 
             // Datos NO EDITABLES
-            textViewDni.text = it.nroDocumento ?: "No especificado"
-            textViewNombre.text = it.nombre ?: "No especificado"
-            textViewApellidos.text = "${it.apellidoPaterno ?: ""} ${it.apellidoMaterno ?: ""}".trim()
-            textViewFechaNacimiento.text = it.fechaNacimiento ?: "No especificada"
+            textViewDni.text = it.nroDocumento
+            textViewNombre.text = it.nombres
+            textViewApellidos.text = "${it.apellidoPaterno} ${it.apellidoMaterno}".trim()
+            textViewFechaNacimiento.text = it.fechaRegistro ?: "No especificada"
             textViewEmailDetalle.text = it.correo
 
             // Datos EDITABLES (inicialmente deshabilitados)
@@ -102,9 +102,9 @@ class PerfilActivity : AppCompatActivity() {
             // PRUEBA HU-04: Mostrar datos cargados
             android.util.Log.d("PRUEBA_HU04", "📋 Datos del usuario:")
             android.util.Log.d("PRUEBA_HU04", "   DNI: ${it.nroDocumento}")
-            android.util.Log.d("PRUEBA_HU04", "   Nombre: ${it.nombre}")
+            android.util.Log.d("PRUEBA_HU04", "   Nombre: ${it.nombres}")
             android.util.Log.d("PRUEBA_HU04", "   Apellidos: ${it.apellidoPaterno} ${it.apellidoMaterno}")
-            android.util.Log.d("PRUEBA_HU04", "   Fecha Nacimiento: ${it.fechaNacimiento}")
+            android.util.Log.d("PRUEBA_HU04", "   Fecha Registro: ${it.fechaRegistro}")
             android.util.Log.d("PRUEBA_HU04", "   Email: ${it.correo}")
             android.util.Log.d("PRUEBA_HU04", "   Dirección: ${it.direccion}")
             android.util.Log.d("PRUEBA_HU04", "   Teléfono: ${it.telefono}")

@@ -1,6 +1,6 @@
 const express = require('express');
 const cors = require('cors');
-const { testConnection } = require('./config/database');
+const { testConnection, corregirConstraintDuplicado } = require('./config/database');
 const { seedTramites } = require('./config/seed-tramites');
 require('dotenv').config();
 
@@ -83,11 +83,16 @@ app.listen(PORT, async () => {
     console.log('✅ Health check: http://localhost:' + PORT + '/api/health');
 
     try {
+        // Probar conexión a la base de datos
         await testConnection();
-        // COMENTADO: Los trámites ya están cargados desde el script SQL de PostgreSQL
-        // await seedTramites();
+
+        // 🔧 CORREGIR AUTOMÁTICAMENTE EL CONSTRAINT DUPLICADO
+        await corregirConstraintDuplicado();
+
+        // Seed de trámites
+        await seedTramites();
     } catch (error) {
-        console.error('❌ Error al inicializar:', error.message);
+        console.error('❌ Error al inicializar:', error);
     }
 });
 

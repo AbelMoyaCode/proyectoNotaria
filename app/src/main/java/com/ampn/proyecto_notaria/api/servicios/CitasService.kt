@@ -48,6 +48,15 @@ interface CitasService {
     ): Response<ApiResponse<CitaResponse>>
 
     /**
+     * Eliminar físicamente una cita
+     * DELETE /citas/{id}
+     */
+    @DELETE("citas/{id}")
+    suspend fun eliminarCita(
+        @Path("id") citaId: String
+    ): Response<ApiResponse<Unit>>
+
+    /**
      * Obtener "Mis Trámites" del usuario autenticado
      * GET /mis-tramites
      */

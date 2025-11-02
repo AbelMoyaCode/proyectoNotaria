@@ -40,10 +40,25 @@ class CitasRepositorio {
                         Result.failure(Exception("No se recibió información de la cita"))
                     }
                 } else {
-                    val mensaje = response.body()?.mensaje ?: "Error al crear la cita"
+                    // Extraer el mensaje de error del servidor
+                    val errorBody = response.errorBody()?.string()
+                    val mensaje = if (errorBody != null) {
+                        try {
+                            // Parsear el JSON de error para obtener el mensaje
+                            val jsonError = org.json.JSONObject(errorBody)
+                            jsonError.optString("mensaje", "Error al crear la cita")
+                        } catch (e: Exception) {
+                            response.body()?.mensaje ?: "Error al crear la cita"
+                        }
+                    } else {
+                        response.body()?.mensaje ?: "Error al crear la cita"
+                    }
+
+                    android.util.Log.e("CitasRepositorio", "❌ Error del servidor: $mensaje")
                     Result.failure(Exception(mensaje))
                 }
             } catch (e: Exception) {
+                android.util.Log.e("CitasRepositorio", "❌ Excepción: ${e.message}", e)
                 Result.failure(e)
             }
         }
@@ -87,6 +102,26 @@ class CitasRepositorio {
                     }
                 } else {
                     Result.failure(Exception("Error al cancelar la cita"))
+                }
+            } catch (e: Exception) {
+                Result.failure(e)
+            }
+        }
+    }
+
+    /**
+     * Eliminar físicamente una cita (solo citas canceladas o finalizadas)
+     */
+    suspend fun eliminarCita(citaId: Int): Result<Boolean> {
+        return withContext(Dispatchers.IO) {
+            try {
+                val response = service.eliminarCita(citaId.toString())
+
+                if (response.isSuccessful && response.body()?.success == true) {
+                    Result.success(true)
+                } else {
+                    val mensaje = response.body()?.mensaje ?: "Error al eliminar la cita"
+                    Result.failure(Exception(mensaje))
                 }
             } catch (e: Exception) {
                 Result.failure(e)

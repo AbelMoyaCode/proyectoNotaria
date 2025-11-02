@@ -33,11 +33,29 @@ async function testConnection() {
     }
 }
 
+// Función para corregir automáticamente el constraint duplicado
+async function corregirConstraintDuplicado() {
+    try {
+        const client = await pool.connect();
+
+        // Eliminar el constraint problemático si existe
+        await client.query('DROP INDEX IF EXISTS idx_usuario_fecha_hora');
+
+        console.log('✅ Constraint duplicado corregido automáticamente');
+        client.release();
+        return true;
+    } catch (error) {
+        console.error('⚠️ Error al corregir constraint (puede que ya esté corregido):', error.message);
+        return false;
+    }
+}
+
 // Función helper para ejecutar queries
 const query = (text, params) => pool.query(text, params);
 
 module.exports = {
     pool,
     query,
-    testConnection
+    testConnection,
+    corregirConstraintDuplicado
 };

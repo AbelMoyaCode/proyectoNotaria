@@ -1,0 +1,96 @@
+================================================
+INSTRUCCIONES PARA CORREGIR EL ERROR DE CITAS
+================================================
+
+PROBLEMA IDENTIFICADO:
+- La base de datos tiene una restricción "unique_usuario_fecha" que impide que un usuario tenga más de una cita en el mismo día
+- Esto es INCORRECTO: un usuario DEBERÍA poder agendar múltiples citas en el mismo día, en horarios diferentes
+- El código del backend también tenía una validación incorrecta
+
+SOLUCIONES APLICADAS:
+✅ 1. Actualizado el código del backend (routes/citas.js) - Ya está corregido
+✅ 2. Creado script SQL para corregir la base de datos
+
+================================================
+PASOS A SEGUIR:
+================================================
+
+PASO 1: Conectar a PostgreSQL
+------------------------------
+1. Abre pgAdmin 4 (o tu cliente PostgreSQL)
+2. Conéctate a tu base de datos "traminotar"
+
+PASO 2: Ejecutar el script de corrección
+-----------------------------------------
+1. Abre el archivo: docs/database/CORREGIR_RESTRICCION_CITAS.sql
+2. Copia TODO el contenido del archivo
+3. En pgAdmin, haz clic derecho en la base de datos "traminotar" → Query Tool
+4. Pega el script completo
+5. Presiona F5 o el botón "Execute" (▶)
+
+PASO 3: Verificar que se ejecutó correctamente
+----------------------------------------------
+Deberías ver mensajes como:
+  ✅ Restricción unique_usuario_fecha eliminada
+  ✅ Índice idx_usuario_horario_unico creado
+
+PASO 4: Limpiar datos de prueba (OPCIONAL)
+-------------------------------------------
+Si quieres eliminar las citas duplicadas que se crearon durante las pruebas:
+
+DELETE FROM citas WHERE id > X;  -- Reemplaza X con el ID más alto que quieras conservar
+
+O para eliminar TODAS las citas de prueba:
+
+TRUNCATE TABLE citas CASCADE;
+TRUNCATE TABLE tramites_usuarios CASCADE;
+TRUNCATE TABLE horarios_disponibles CASCADE;
+
+PASO 5: Reiniciar el servidor
+------------------------------
+1. Detén el servidor Node.js (Ctrl+C en la terminal)
+2. Reinícialo: npm start
+
+================================================
+RESULTADO ESPERADO:
+================================================
+
+ANTES (INCORRECTO):
+❌ Usuario solo puede tener 1 cita por día
+❌ Error: "Ya existe la llave (usuario_id, fecha_cita)=(3, 2025-11-03)"
+
+DESPUÉS (CORRECTO):
+✅ Usuario puede tener MÚLTIPLES citas en el mismo día (horarios diferentes)
+✅ Usuario NO puede reservar el mismo horario dos veces
+✅ Cada horario solo puede ser reservado por un usuario
+
+EJEMPLOS VÁLIDOS:
+✅ Usuario 3 → 2025-11-03 09:00 → Trámite A
+✅ Usuario 3 → 2025-11-03 10:00 → Trámite B (MISMO DÍA, DIFERENTE HORA)
+✅ Usuario 3 → 2025-11-03 11:00 → Trámite C (MISMO DÍA, DIFERENTE HORA)
+
+EJEMPLO INVÁLIDO:
+❌ Usuario 3 → 2025-11-03 09:00 → Trámite A
+❌ Usuario 3 → 2025-11-03 09:00 → Trámite B (MISMO HORARIO)
+
+================================================
+¿ALGO SALIÓ MAL?
+================================================
+
+Si después de ejecutar el script sigues teniendo el error:
+
+1. Verifica que el script se ejecutó sin errores
+2. Ejecuta esta consulta para ver las restricciones actuales:
+
+   SELECT conname, pg_get_constraintdef(oid)
+   FROM pg_constraint
+   WHERE conrelid = 'citas'::regclass;
+
+3. Si aún existe "unique_usuario_fecha", elimínala manualmente:
+
+   ALTER TABLE citas DROP CONSTRAINT unique_usuario_fecha;
+
+4. Reinicia el servidor Node.js
+
+================================================
+

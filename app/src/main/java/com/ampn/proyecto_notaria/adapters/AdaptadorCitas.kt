@@ -19,7 +19,8 @@ import java.util.Locale
 class AdaptadorCitas(
     private var citas: List<CitaResponse>,
     private val onReprogramarClick: (CitaResponse) -> Unit,
-    private val onCancelarClick: (CitaResponse) -> Unit
+    private val onCancelarClick: (CitaResponse) -> Unit,
+    private val onEliminarClick: ((CitaResponse) -> Unit)? = null // ✅ NUEVO: callback para eliminar
 ) : RecyclerView.Adapter<AdaptadorCitas.CitaViewHolder>() {
 
     class CitaViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
@@ -28,6 +29,7 @@ class AdaptadorCitas(
         val textViewEstado: TextView = itemView.findViewById(R.id.textViewEstado)
         val buttonReprogramar: Button = itemView.findViewById(R.id.buttonReprogramar)
         val buttonCancelar: Button = itemView.findViewById(R.id.buttonCancelar)
+        val buttonEliminar: Button? = itemView.findViewById(R.id.buttonEliminar) // ✅ NUEVO
         val layoutBotones: View = itemView.findViewById(R.id.layoutBotones)
     }
 
@@ -52,19 +54,37 @@ class AdaptadorCitas(
         holder.textViewEstado.setTextColor(colorTexto)
         holder.textViewEstado.setBackgroundColor(colorFondo)
 
-        // Mostrar botones solo si la cita está activa
-        if (cita.estado in listOf("AGENDADO", "EN_PROCESO")) {
-            holder.layoutBotones.visibility = View.VISIBLE
+        // Configurar botones según el estado de la cita
+        when (cita.estado.uppercase()) {
+            "AGENDADO", "EN_PROCESO" -> {
+                // Cita ACTIVA: mostrar botones de reprogramar y cancelar
+                holder.layoutBotones.visibility = View.VISIBLE
+                holder.buttonReprogramar.visibility = View.VISIBLE
+                holder.buttonCancelar.visibility = View.VISIBLE
+                holder.buttonEliminar?.visibility = View.GONE
 
-            holder.buttonReprogramar.setOnClickListener {
-                onReprogramarClick(cita)
-            }
+                holder.buttonReprogramar.setOnClickListener {
+                    onReprogramarClick(cita)
+                }
 
-            holder.buttonCancelar.setOnClickListener {
-                onCancelarClick(cita)
+                holder.buttonCancelar.setOnClickListener {
+                    onCancelarClick(cita)
+                }
             }
-        } else {
-            holder.layoutBotones.visibility = View.GONE
+            "CANCELADO", "FINALIZADO" -> {
+                // Cita PASADA/CANCELADA: mostrar solo botón de eliminar
+                holder.layoutBotones.visibility = View.VISIBLE
+                holder.buttonReprogramar.visibility = View.GONE
+                holder.buttonCancelar.visibility = View.GONE
+                holder.buttonEliminar?.visibility = View.VISIBLE
+
+                holder.buttonEliminar?.setOnClickListener {
+                    onEliminarClick?.invoke(cita)
+                }
+            }
+            else -> {
+                holder.layoutBotones.visibility = View.GONE
+            }
         }
     }
 
@@ -76,10 +96,10 @@ class AdaptadorCitas(
     private fun formatearFechaHora(fecha: String, hora: String): String {
         return try {
             val formatoEntrada = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
-            val formatoSalida = SimpleDateFormat("dd 'de' MMMM, HH:mm", Locale("es", "ES"))
+            val formatoSalida = SimpleDateFormat("dd 'de' MMMM, HH:mm", Locale.forLanguageTag("es-ES"))
             val date = formatoEntrada.parse(fecha)
             val fechaFormateada = date?.let {
-                SimpleDateFormat("dd 'de' MMMM", Locale("es", "ES")).format(it)
+                SimpleDateFormat("dd 'de' MMMM", Locale.forLanguageTag("es-ES")).format(it)
             } ?: fecha
             "$fechaFormateada, $hora"
         } catch (e: Exception) {
@@ -133,4 +153,3 @@ class AdaptadorCitas(
         notifyDataSetChanged()
     }
 }
-
