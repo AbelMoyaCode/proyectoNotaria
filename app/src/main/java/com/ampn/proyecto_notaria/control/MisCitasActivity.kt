@@ -20,20 +20,6 @@ import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.*
 
-/**
- * HU-10: Seguimiento y Cancelación de Cita
- * Muestra las citas del usuario (próximas y pasadas)
- * Permite reprogramar y cancelar citas
- * Permite eliminar citas pasadas
- * Permite vaciar todas las citas
- *
- * PRUEBAS:
- * - Visualizar citas ordenadas por fecha (más reciente primero)
- * - Filtrar citas por estado (próximas/pasadas)
- * - Cancelar citas individualmente
- * - Eliminar citas pasadas
- * - Vaciar todas las citas
- */
 class MisCitasActivity : AppCompatActivity() {
 
     private lateinit var gestorSesion: GestorSesion
@@ -53,7 +39,6 @@ class MisCitasActivity : AppCompatActivity() {
         gestorSesion = GestorSesion(this)
         citasRepositorio = CitasRepositorio()
 
-        // Verificar autenticación
         if (!gestorSesion.estaAutenticado()) {
             redirigirALogin()
             return
@@ -63,9 +48,6 @@ class MisCitasActivity : AppCompatActivity() {
         configurarRecyclerView()
         configurarTabs()
         cargarMisCitas()
-
-        // PRUEBA HU-10: Inicio de actividad
-        android.util.Log.d("PRUEBA_HU10", "✅ MisCitasActivity iniciada correctamente")
     }
 
     private fun inicializarVistas() {
@@ -78,7 +60,6 @@ class MisCitasActivity : AppCompatActivity() {
             finish()
         }
 
-        // Botón de opciones (menú de acciones)
         buttonOpciones.setOnClickListener {
             mostrarMenuOpciones()
         }
@@ -86,13 +67,24 @@ class MisCitasActivity : AppCompatActivity() {
 
     private fun configurarRecyclerView() {
         recyclerView.layoutManager = LinearLayoutManager(this)
+        // Se actualiza el adaptador para pasarle los nuevos listeners
         adaptador = AdaptadorCitas(
             citas = emptyList(),
-            onReprogramarClick = { cita -> reprogramarCita(cita) },
-            onCancelarClick = { cita -> mostrarDialogoCancelar(cita) },
-            onEliminarClick = { cita -> mostrarDialogoEliminar(cita) } // ✅ NUEVO
+            onVerDetallesClick = { cita -> verDetalleMiCita(cita) },
+            onCancelarClick = { cita -> mostrarDialogoCancelar(cita) }
         )
         recyclerView.adapter = adaptador
+    }
+
+    /**
+     * HU-12: Lanza la pantalla de detalle enviando ÚNICAMENTE el ID de la cita.
+     */
+    private fun verDetalleMiCita(cita: CitaResponse) {
+        val intent = Intent(this, DetalleMiCitaActivity::class.java).apply {
+            // La forma correcta: solo enviamos el identificador único.
+            putExtra("CITA_ID", cita.id)
+        }
+        startActivity(intent)
     }
 
     private fun configurarTabs() {
@@ -100,7 +92,6 @@ class MisCitasActivity : AppCompatActivity() {
             override fun onTabSelected(tab: TabLayout.Tab) {
                 filtrarCitasPorTab(tab.position)
             }
-
             override fun onTabUnselected(tab: TabLayout.Tab) {}
             override fun onTabReselected(tab: TabLayout.Tab) {}
         })
@@ -114,43 +105,23 @@ class MisCitasActivity : AppCompatActivity() {
             return
         }
 
-        android.util.Log.d("PRUEBA_HU10", "📅 Cargando citas del usuario: $usuarioId")
-
         lifecycleScope.launch {
             try {
                 val resultado = citasRepositorio.obtenerCitasUsuario(usuarioId.toInt())
-
                 resultado.onSuccess { citas ->
-                    // ORDENAR POR FECHA (MÁS RECIENTE PRIMERO)
                     todasLasCitas = citas.sortedByDescending { it.fecha }
-
-                    android.util.Log.d("PRUEBA_HU10", "✅ Citas obtenidas y ordenadas: ${citas.size}")
-
                     if (citas.isEmpty()) {
                         mostrarMensajeSinCitas()
                     } else {
-                        // Mostrar citas próximas por defecto
                         filtrarCitasPorTab(0)
                     }
                 }
-
                 resultado.onFailure { error ->
-                    android.util.Log.e("PRUEBA_HU10", "❌ Error al cargar citas: ${error.message}")
-                    Toast.makeText(
-                        this@MisCitasActivity,
-                        "Error al cargar citas: ${error.message}",
-                        Toast.LENGTH_LONG
-                    ).show()
+                    Toast.makeText(this@MisCitasActivity, "Error al cargar citas: ${error.message}", Toast.LENGTH_LONG).show()
                     mostrarMensajeSinCitas()
                 }
-
             } catch (e: Exception) {
-                android.util.Log.e("PRUEBA_HU10", "❌ Excepción al cargar citas: ${e.message}", e)
-                Toast.makeText(
-                    this@MisCitasActivity,
-                    "Error inesperado: ${e.message}",
-                    Toast.LENGTH_LONG
-                ).show()
+                Toast.makeText(this@MisCitasActivity, "Error inesperado: ${e.message}", Toast.LENGTH_LONG).show()
                 mostrarMensajeSinCitas()
             }
         }
@@ -158,22 +129,11 @@ class MisCitasActivity : AppCompatActivity() {
 
     private fun filtrarCitasPorTab(tabPosition: Int) {
         val fechaHoy = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date())
-
         val citasFiltradas = when (tabPosition) {
-            0 -> { // Próximas (ordenadas por fecha, más reciente primero)
-                todasLasCitas.filter { cita ->
-                    cita.fecha >= fechaHoy && cita.estado !in listOf("CANCELADO", "FINALIZADO")
-                }
-            }
-            1 -> { // Pasadas (ordenadas por fecha, más reciente primero)
-                todasLasCitas.filter { cita ->
-                    cita.fecha < fechaHoy || cita.estado in listOf("CANCELADO", "FINALIZADO")
-                }
-            }
+            0 -> todasLasCitas.filter { it.fecha >= fechaHoy && it.estado !in listOf("CANCELADO", "FINALIZADO") }
+            1 -> todasLasCitas.filter { it.fecha < fechaHoy || it.estado in listOf("CANCELADO", "FINALIZADO") }
             else -> todasLasCitas
         }
-
-        android.util.Log.d("PRUEBA_HU10", "🔍 Filtro aplicado. Tab: $tabPosition, Citas mostradas: ${citasFiltradas.size}")
 
         if (citasFiltradas.isEmpty()) {
             mostrarMensajeSinCitas()
@@ -188,14 +148,11 @@ class MisCitasActivity : AppCompatActivity() {
         layoutSinCitas.visibility = View.VISIBLE
         recyclerView.visibility = View.GONE
     }
-
-    /**
-     * Mostrar menú de opciones con acciones sobre las citas
-     */
+    
     private fun mostrarMenuOpciones() {
         val opciones = arrayOf(
-            "🗑️ Eliminar citas pasadas",
-            "⚠️ Vaciar todas las citas"
+            "Eliminar citas pasadas",
+            "Vaciar todas las citas"
         )
 
         AlertDialog.Builder(this)
@@ -210,9 +167,6 @@ class MisCitasActivity : AppCompatActivity() {
             .show()
     }
 
-    /**
-     * Confirmar eliminación de citas pasadas
-     */
     private fun confirmarEliminarCitasPasadas() {
         val fechaHoy = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date())
         val citasPasadas = todasLasCitas.filter { cita ->
@@ -226,50 +180,14 @@ class MisCitasActivity : AppCompatActivity() {
 
         AlertDialog.Builder(this)
             .setTitle("Eliminar Citas Pasadas")
-            .setMessage("¿Deseas eliminar ${citasPasadas.size} citas pasadas?\n\nEsta acción no se puede deshacer.")
+            .setMessage("¿Deseas eliminar ${citasPasadas.size} citas pasadas?")
             .setPositiveButton("Sí, eliminar") { _, _ ->
-                eliminarCitasPasadas(citasPasadas)
+                eliminarOVaciarCitas(citasPasadas, "Eliminado automáticamente")
             }
             .setNegativeButton("Cancelar", null)
             .show()
     }
 
-    /**
-     * Eliminar citas pasadas
-     */
-    private fun eliminarCitasPasadas(citasPasadas: List<CitaResponse>) {
-        android.util.Log.d("PRUEBA_HU10", "🗑️ Eliminando ${citasPasadas.size} citas pasadas")
-
-        lifecycleScope.launch {
-            var exitosas = 0
-            var fallidas = 0
-
-            citasPasadas.forEach { cita ->
-                try {
-                    val resultado = citasRepositorio.cancelarCita(cita.id, "Eliminado automáticamente")
-                    resultado.onSuccess { exitosas++ }
-                    resultado.onFailure { fallidas++ }
-                } catch (e: Exception) {
-                    fallidas++
-                }
-            }
-
-            android.util.Log.d("PRUEBA_HU10", "✅ Eliminación completada. Exitosas: $exitosas, Fallidas: $fallidas")
-
-            Toast.makeText(
-                this@MisCitasActivity,
-                "✅ Eliminadas $exitosas citas pasadas",
-                Toast.LENGTH_LONG
-            ).show()
-
-            // Recargar citas
-            cargarMisCitas()
-        }
-    }
-
-    /**
-     * Confirmar vaciar todas las citas
-     */
     private fun confirmarVaciarTodasLasCitas() {
         if (todasLasCitas.isEmpty()) {
             Toast.makeText(this, "No hay citas para eliminar", Toast.LENGTH_SHORT).show()
@@ -280,25 +198,20 @@ class MisCitasActivity : AppCompatActivity() {
             .setTitle("⚠️ Vaciar Todas las Citas")
             .setMessage("¿Estás SEGURO de que deseas eliminar TODAS las ${todasLasCitas.size} citas?\n\n⚠️ Esta acción NO se puede deshacer.")
             .setPositiveButton("Sí, vaciar todo") { _, _ ->
-                vaciarTodasLasCitas()
+                eliminarOVaciarCitas(todasLasCitas, "Vaciado completo")
             }
             .setNegativeButton("Cancelar", null)
             .show()
     }
 
-    /**
-     * Vaciar todas las citas
-     */
-    private fun vaciarTodasLasCitas() {
-        android.util.Log.d("PRUEBA_HU10", "⚠️ VACIANDO TODAS LAS CITAS (${todasLasCitas.size})")
-
+    private fun eliminarOVaciarCitas(citas: List<CitaResponse>, motivo: String) {
         lifecycleScope.launch {
             var exitosas = 0
             var fallidas = 0
 
-            todasLasCitas.forEach { cita ->
+            citas.forEach { cita ->
                 try {
-                    val resultado = citasRepositorio.cancelarCita(cita.id, "Vaciado completo")
+                    val resultado = citasRepositorio.cancelarCita(cita.id, motivo)
                     resultado.onSuccess { exitosas++ }
                     resultado.onFailure { fallidas++ }
                 } catch (e: Exception) {
@@ -306,165 +219,35 @@ class MisCitasActivity : AppCompatActivity() {
                 }
             }
 
-            android.util.Log.d("PRUEBA_HU10", "✅ Vaciado completado. Exitosas: $exitosas, Fallidas: $fallidas")
+            val mensaje = if (motivo == "Vaciado completo") "Eliminadas todas las citas ($exitosas)" else "Eliminadas $exitosas citas pasadas"
+            Toast.makeText(this@MisCitasActivity, "✅ $mensaje", Toast.LENGTH_LONG).show()
 
-            Toast.makeText(
-                this@MisCitasActivity,
-                "✅ Eliminadas todas las citas ($exitosas)",
-                Toast.LENGTH_LONG
-            ).show()
-
-            // Recargar citas
             cargarMisCitas()
         }
     }
 
-    /**
-     * Reprogramar una cita
-     */
-    private fun reprogramarCita(cita: CitaResponse) {
-        android.util.Log.d("PRUEBA_HU10", "📅 Reprogramando cita: ${cita.id}")
-
-        Toast.makeText(
-            this,
-            "Funcionalidad de reprogramación en desarrollo",
-            Toast.LENGTH_SHORT
-        ).show()
-
-        // TODO: Implementar diálogo para seleccionar nueva fecha/hora
-        // y llamar a citasRepositorio.reprogramarCita()
-    }
-
-    /**
-     * HU-10: Mostrar diálogo de confirmación para cancelar cita
-     */
     private fun mostrarDialogoCancelar(cita: CitaResponse) {
         AlertDialog.Builder(this)
             .setTitle("Cancelar Cita")
             .setMessage("¿Estás seguro de que deseas cancelar la cita de \"${cita.tramiteNombre}\" programada para el ${cita.fecha} a las ${cita.hora}?")
-            .setPositiveButton("Sí, cancelar") { _, _ ->
-                cancelarCita(cita)
-            }
-            .setNegativeButton("No") { dialog, _ ->
-                dialog.dismiss()
-            }
+            .setPositiveButton("Sí, cancelar") { _, _ -> cancelarCita(cita) }
+            .setNegativeButton("No", null)
             .show()
     }
 
-    /**
-     * HU-10: Mostrar diálogo de confirmación para eliminar cita
-     */
-    private fun mostrarDialogoEliminar(cita: CitaResponse) {
-        AlertDialog.Builder(this)
-            .setTitle("Eliminar Cita")
-            .setMessage("¿Estás seguro de que deseas eliminar la cita de \"${cita.tramiteNombre}\" programada para el ${cita.fecha} a las ${cita.hora}?")
-            .setPositiveButton("Sí, eliminar") { _, _ ->
-                eliminarCita(cita)
-            }
-            .setNegativeButton("No") { dialog, _ ->
-                dialog.dismiss()
-            }
-            .show()
-    }
-
-    /**
-     * HU-10: Eliminar una cita
-     * Llama al repositorio para eliminar FÍSICAMENTE la cita del backend
-     * Y actualiza la lista INMEDIATAMENTE sin esperar recarga del servidor
-     */
-    private fun eliminarCita(cita: CitaResponse) {
-        android.util.Log.d("PRUEBA_HU10", "🗑️ Eliminando cita ID: ${cita.id}")
-
-        lifecycleScope.launch {
-            try {
-                val resultado = citasRepositorio.eliminarCita(citaId = cita.id)
-
-                resultado.onSuccess {
-                    android.util.Log.d("PRUEBA_HU10", "✅ Cita ID ${cita.id} eliminada exitosamente")
-
-                    // ✅ ELIMINAR INMEDIATAMENTE DE LA LISTA LOCAL (sin esperar recarga)
-                    todasLasCitas = todasLasCitas.filter { it.id != cita.id }
-
-                    // Actualizar la vista según el tab actual
-                    val tabActual = tabLayout.selectedTabPosition
-                    filtrarCitasPorTab(tabActual)
-
-                    Toast.makeText(
-                        this@MisCitasActivity,
-                        "✅ Cita eliminada correctamente",
-                        Toast.LENGTH_SHORT
-                    ).show()
-
-                    android.util.Log.d("PRUEBA_HU10", "✅ Cita eliminada de la lista local. Citas restantes: ${todasLasCitas.size}")
-                }
-
-                resultado.onFailure { error ->
-                    android.util.Log.e("PRUEBA_HU10", "❌ Error al eliminar cita: ${error.message}")
-
-                    Toast.makeText(
-                        this@MisCitasActivity,
-                        "❌ ${error.message}",
-                        Toast.LENGTH_LONG
-                    ).show()
-                }
-
-            } catch (e: Exception) {
-                android.util.Log.e("PRUEBA_HU10", "❌ Excepción al eliminar: ${e.message}", e)
-
-                Toast.makeText(
-                    this@MisCitasActivity,
-                    "❌ Error inesperado: ${e.message}",
-                    Toast.LENGTH_LONG
-                ).show()
-            }
-        }
-    }
-
-    /**
-     * HU-10: Cancelar una cita
-     * Llama al repositorio para cancelar la cita en el backend
-     */
     private fun cancelarCita(cita: CitaResponse) {
-        android.util.Log.d("PRUEBA_HU10", "🚫 Cancelando cita: ${cita.id}")
-
         lifecycleScope.launch {
             try {
-                val resultado = citasRepositorio.cancelarCita(
-                    citaId = cita.id,
-                    motivo = "Cancelado por el usuario"
-                )
-
+                val resultado = citasRepositorio.cancelarCita(cita.id, "Cancelado por el usuario")
                 resultado.onSuccess {
-                    android.util.Log.d("PRUEBA_HU10", "✅ Cita cancelada exitosamente")
-
-                    Toast.makeText(
-                        this@MisCitasActivity,
-                        "✅ Cita cancelada correctamente",
-                        Toast.LENGTH_LONG
-                    ).show()
-
-                    // Recargar citas
+                    Toast.makeText(this@MisCitasActivity, "✅ Cita cancelada correctamente", Toast.LENGTH_LONG).show()
                     cargarMisCitas()
                 }
-
                 resultado.onFailure { error ->
-                    android.util.Log.e("PRUEBA_HU10", "❌ Error al cancelar cita: ${error.message}")
-
-                    Toast.makeText(
-                        this@MisCitasActivity,
-                        "❌ Error al cancelar: ${error.message}",
-                        Toast.LENGTH_LONG
-                    ).show()
+                    Toast.makeText(this@MisCitasActivity, "❌ Error al cancelar: ${error.message}", Toast.LENGTH_LONG).show()
                 }
-
             } catch (e: Exception) {
-                android.util.Log.e("PRUEBA_HU10", "❌ Excepción al cancelar: ${e.message}", e)
-
-                Toast.makeText(
-                    this@MisCitasActivity,
-                    "❌ Error inesperado: ${e.message}",
-                    Toast.LENGTH_LONG
-                ).show()
+                Toast.makeText(this@MisCitasActivity, "❌ Error inesperado: ${e.message}", Toast.LENGTH_LONG).show()
             }
         }
     }

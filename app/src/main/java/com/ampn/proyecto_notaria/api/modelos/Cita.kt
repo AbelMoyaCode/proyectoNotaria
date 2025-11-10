@@ -80,6 +80,14 @@ data class CitaResponse(
     @SerializedName("tramite_descripcion")
     val tramiteDescripcion: String? = null,
 
+    // --- ¡CAMPOS AÑADIDOS! ---
+    @SerializedName("tramite_requisitos")
+    val tramiteRequisitos: String? = null,
+
+    @SerializedName("observaciones")
+    val observaciones: String? = null,
+    // -------------------------
+
     @SerializedName("precio")
     val precio: Double,
 

@@ -3,8 +3,9 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_margin="8dp"
-    app:cardCornerRadius="12dp"
+    android:layout_marginHorizontal="16dp"
+    android:layout_marginVertical="8dp"
+    app:cardCornerRadius="8dp"
     app:cardElevation="4dp">
 
     <LinearLayout
@@ -13,124 +14,78 @@
         android:orientation="vertical"
         android:padding="16dp">
 
-        <!-- Header con icono y nombre del trámite -->
+        <!-- Nombre del trámite -->
+        <TextView
+            android:id="@+id/textViewTramiteNombre"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Nombre del Trámite"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            android:textColor="@color/black" />
+
+        <!-- Fecha y Hora -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="horizontal">
+            android:orientation="horizontal"
+            android:layout_marginTop="8dp">
 
-            <ImageView
-                android:layout_width="40dp"
-                android:layout_height="40dp"
-                android:src="@android:drawable/ic_menu_edit"
-                android:background="@color/verde_claro"
-                android:padding="8dp"
-                android:contentDescription="Trámite" />
-
-            <LinearLayout
+            <TextView
+                android:id="@+id/textViewFecha"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:layout_marginStart="12dp"
-                android:orientation="vertical">
+                android:text="Fecha: 2024-12-25"
+                android:textSize="14sp"
+                android:textColor="@color/colorTextSecondary" />
 
-                <TextView
-                    android:id="@+id/textViewNombreTramite"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Firma de Escrituras"
-                    android:textSize="16sp"
-                    android:textStyle="bold"
-                    android:textColor="@color/black" />
-
-                <TextView
-                    android:id="@+id/textViewNotaria"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Notaría Pública #153"
-                    android:textSize="12sp"
-                    android:textColor="@color/colorTextSecondary" />
-            </LinearLayout>
+            <TextView
+                android:id="@+id/textViewHora"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Hora: 10:30 AM"
+                android:textSize="14sp"
+                android:textColor="@color/colorTextSecondary" />
         </LinearLayout>
 
-        <!-- Fecha y hora -->
-        <TextView
-            android:id="@+id/textViewFechaHora"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="12dp"
-            android:text="15 de Julio, 10:00 AM"
-            android:textSize="14sp"
-            android:textColor="@color/black" />
-
-        <!-- Estado -->
+        <!-- Estado de la cita -->
         <TextView
             android:id="@+id/textViewEstado"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="8dp"
-            android:text="Confirmada"
-            android:textSize="13sp"
-            android:textStyle="bold"
-            android:textColor="@color/colorPrimary"
-            android:paddingHorizontal="12dp"
-            android:paddingVertical="4dp"
-            android:background="@color/verde_claro" />
+            android:text="Estado: PENDIENTE"
+            android:textSize="14sp"
+            android:textStyle="italic"
+            android:textColor="@color/colorPrimary" />
 
         <!-- Botones de acción -->
         <LinearLayout
-            android:id="@+id/layoutBotones"
+            android:id="@+id/layoutBotonesAccion"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
             android:orientation="horizontal"
-            android:gravity="end">
+            android:layout_marginTop="16dp">
 
             <Button
-                android:id="@+id/buttonReprogramar"
-                android:layout_width="wrap_content"
-                android:layout_height="40dp"
-                android:text="Reprogramar"
-                android:textSize="12sp"
-                android:textColor="@color/colorPrimary"
-                android:backgroundTint="@color/verde_claro"
-                style="?attr/materialButtonOutlinedStyle" />
+                android:id="@+id/buttonVerDetalles"
+                style="?android:attr/borderlessButtonStyle"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Ver Detalles"
+                android:textColor="@color/colorPrimary" />
 
             <Button
                 android:id="@+id/buttonCancelar"
-                android:layout_width="wrap_content"
-                android:layout_height="40dp"
-                android:layout_marginStart="8dp"
+                style="?android:attr/borderlessButtonStyle"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
                 android:text="Cancelar"
-                android:textSize="12sp"
-                android:textColor="@color/colorTextSecondary"
-                android:backgroundTint="@android:color/transparent"
-                style="?attr/materialButtonOutlinedStyle" />
-
-            <!-- ✅ NUEVO: Botón Eliminar para citas canceladas/finalizadas -->
-            <Button
-                android:id="@+id/buttonEliminar"
-                android:layout_width="wrap_content"
-                android:layout_height="40dp"
-                android:layout_marginStart="8dp"
-                android:text="Eliminar"
-                android:textSize="12sp"
-                android:textColor="#E74C3C"
-                android:backgroundTint="@android:color/transparent"
-                android:visibility="gone"
-                style="?attr/materialButtonOutlinedStyle" />
+                android:textColor="#D32F2F" />
         </LinearLayout>
-
-        <!-- Botón Ver Detalles (alternativa) -->
-        <Button
-            android:id="@+id/buttonVerDetalles"
-            android:layout_width="match_parent"
-            android:layout_height="48dp"
-            android:layout_marginTop="8dp"
-            android:text="Ver Detalles"
-            android:textColor="@color/white"
-            android:backgroundTint="@color/colorPrimary"
-            android:visibility="gone" />
 
     </LinearLayout>
 </androidx.cardview.widget.CardView>

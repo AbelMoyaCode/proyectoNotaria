@@ -28,6 +28,15 @@ interface CitasService {
     ): Response<ApiResponse<List<CitaResponse>>>
 
     /**
+     * ¡NUEVO! Obtener el detalle de una sola cita
+     * GET /citas/{id}
+     */
+    @GET("citas/{id}")
+    suspend fun obtenerDetalleCita(
+        @Path("id") citaId: String
+    ): Response<ApiResponse<CitaResponse>>
+
+    /**
      * Reprogramar una cita existente
      * PATCH /citas/{id}/reprogramar
      */

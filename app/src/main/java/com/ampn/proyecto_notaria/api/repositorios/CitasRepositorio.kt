@@ -83,6 +83,30 @@ class CitasRepositorio {
             }
         }
     }
+    
+    /**
+     * ¡NUEVO! Obtener el detalle de una sola cita
+     */
+    suspend fun obtenerDetalleCita(citaId: Int): Result<CitaResponse> {
+        return withContext(Dispatchers.IO) {
+            try {
+                val response = service.obtenerDetalleCita(citaId.toString())
+
+                if (response.isSuccessful && response.body()?.success == true) {
+                    val cita = response.body()?.data
+                    if (cita != null) {
+                        Result.success(cita)
+                    } else {
+                        Result.failure(Exception("No se encontró el detalle de la cita"))
+                    }
+                } else {
+                    Result.failure(Exception("Error al obtener el detalle de la cita"))
+                }
+            } catch (e: Exception) {
+                Result.failure(e)
+            }
+        }
+    }
 
     /**
      * Cancelar una cita

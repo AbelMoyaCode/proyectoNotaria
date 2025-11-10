@@ -6,7 +6,6 @@ import com.google.gson.annotations.SerializedName
  * Modelo de datos para Trámite de Usuario
  */
 
-
 data class TramiteUsuario(
     @SerializedName("id")
     val id: String? = null,
@@ -69,4 +68,3 @@ data class MiTramite(
     @SerializedName("creado_en")
     val creadoEn: String
 )
-

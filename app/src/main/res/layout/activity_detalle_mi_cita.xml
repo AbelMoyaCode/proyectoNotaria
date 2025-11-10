@@ -1,0 +1,162 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/fondo_claro">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+
+        <!-- Encabezado -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:padding="16dp"
+            android:background="@color/colorPrimary"
+            android:elevation="2dp"
+            android:gravity="center_vertical">
+
+            <ImageButton
+                android:id="@+id/buttonVolver"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:contentDescription="Volver"
+                android:tint="@color/white"
+                android:src="@android:drawable/ic_menu_close_clear_cancel" />
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Detalle de Mi Trámite"
+                android:textSize="18sp"
+                android:textStyle="bold"
+                android:textColor="@color/white"
+                android:layout_marginStart="8dp" />
+        </LinearLayout>
+
+        <!-- Contenido principal -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="20dp">
+
+            <!-- Título del trámite -->
+            <TextView
+                android:id="@+id/textViewTituloTramite"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Compraventa de Inmueble"
+                android:textSize="24sp"
+                android:textStyle="bold"
+                android:textColor="#222222"
+                android:paddingBottom="8dp" />
+
+            <!-- Sección de Estado del Trámite -->
+            <androidx.cardview.widget.CardView
+                android:id="@+id/cardViewEstadoTramite"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                app:cardCornerRadius="8dp"
+                app:cardElevation="3dp"
+                android:layout_marginBottom="20dp"
+                app:cardUseCompatPadding="true">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="16dp">
+
+                    <!-- Estado -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:paddingBottom="12dp">
+
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="Estado Actual:"
+                            android:textSize="16sp"
+                            android:textStyle="bold"
+                            android:textColor="#333333" />
+
+                        <TextView
+                            android:id="@+id/textViewEstado"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="En Proceso"
+                            android:textSize="16sp"
+                            android:textStyle="bold"
+                            android:textColor="@color/colorPrimary" />
+                    </LinearLayout>
+
+                    <!-- Observaciones -->
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Observaciones de la Notaría:"
+                        android:textSize="15sp"
+                        android:textColor="#666666"
+                        android:paddingBottom="4dp"/>
+
+                    <TextView
+                        android:id="@+id/textViewObservaciones"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="Pendiente de firma del comprador."
+                        android:textSize="15sp"
+                        android:textColor="#333333" />
+                </LinearLayout>
+            </androidx.cardview.widget.CardView>
+
+             <!-- Descripción -->
+            <TextView
+                android:id="@+id/textViewDescripcion"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Formaliza la transferencia de propiedad de un inmueble con todas las garantías legales."
+                android:textSize="15sp"
+                android:textColor="#555555"
+                android:lineSpacingExtra="2dp"
+                android:paddingBottom="20dp" />
+
+            <!-- Sección Requisitos -->
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Requisitos Generales"
+                android:textSize="18sp"
+                android:textStyle="bold"
+                android:textColor="#333333"
+                android:paddingBottom="8dp" />
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:background="#E0E0E0"
+                android:layout_marginBottom="12dp" />
+
+            <!-- Lista de requisitos -->
+            <TextView
+                android:id="@+id/textViewRequisitos"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="• Identificaciones oficiales vigentes\n• Escritura pública del inmueble\n• Comprobante de domicilio reciente\n• Constancia de no adeudo"
+                android:textSize="15sp"
+                android:textColor="#555555"
+                android:lineSpacingExtra="4dp"
+                android:paddingBottom="20dp" />
+
+        </LinearLayout>
+    </LinearLayout>
+</ScrollView>
