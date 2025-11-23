@@ -17,6 +17,10 @@ import java.util.Locale
  */
 class DetalleTramiteActivity : AppCompatActivity() {
 
+    companion object {
+        val activityList = mutableListOf<AppCompatActivity>()
+    }
+
     private lateinit var gestorSesion: GestorSesion
     private var tramiteCodigo: String? = null
     private var tramiteNombre: String? = null
@@ -117,7 +121,10 @@ class DetalleTramiteActivity : AppCompatActivity() {
             return
         }
 
-        // Navegar a la pantalla de agendar cita SIN cerrar esta activity
+        // Añadir esta activity a la lista para cerrarla después
+        activityList.add(this)
+
+        // Navegar a la pantalla de agendar cita
         val intent = Intent(this, AgendarCitaActivity::class.java)
         intent.putExtra("TRAMITE_CODIGO", tramiteCodigo)
         intent.putExtra("TRAMITE_NOMBRE", tramiteNombre)
@@ -125,7 +132,6 @@ class DetalleTramiteActivity : AppCompatActivity() {
         intent.putExtra("TRAMITE_REQUISITOS", tramiteRequisitos)
         intent.putExtra("TRAMITE_PRECIO", tramitePrecio)
         startActivity(intent)
-        // NO llamar finish() aquí para mantener la activity viva
     }
 
     // Sobrescribir onBackPressed para manejar el botón atrás del sistema

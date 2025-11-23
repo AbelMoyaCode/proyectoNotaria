@@ -126,32 +126,26 @@ class ConfirmacionCitaActivity : AppCompatActivity() {
                 )
 
                 resultado.onSuccess { citaCreada ->
-                    // Formatear fecha para el Toast
-                    val fechaFormateada = try {
-                        val formatoEntrada = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
-                        val formatoSalida = SimpleDateFormat("dd/MM/yyyy", Locale("es", "ES"))
-                        val fechaDate = formatoEntrada.parse(fecha!!)
-                        fechaDate?.let { formatoSalida.format(it) } ?: fecha
-                    } catch (e: Exception) {
-                        fecha
-                    }
 
-                    // Mostrar Toast mejorado con fecha y horario
                     Toast.makeText(
                         this@ConfirmacionCitaActivity,
-                        "✅ Cita Registrada Exitosamente\n\n" +
-                                "📋 Trámite: $tramiteNombre\n" +
-                                "📅 Fecha: $fechaFormateada\n" +
-                                "🕐 Horario: $horario",
+                        "✅ Cita Registrada Exitosamente",
                         Toast.LENGTH_LONG
                     ).show()
 
-                    // Navegar de regreso a la lista de trámites
-                    val intent = Intent(this@ConfirmacionCitaActivity, ListadoTramitesActivity::class.java)
-                    intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
+                    // Cerrar todas las actividades anteriores en la lista
+                    for (activity in DetalleTramiteActivity.activityList) {
+                        activity.finish()
+                    }
+                    DetalleTramiteActivity.activityList.clear()
+
+                    // Navegar a la pantalla principal (Home), limpiando el historial de pantallas
+                    val intent = Intent(this@ConfirmacionCitaActivity, MainActivity::class.java).apply {
+                        flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                    }
                     startActivity(intent)
 
-                    // Cerrar esta pantalla
+                    // Cerrar esta pantalla para no volver a ella con el botón 'atrás'
                     finish()
                 }
 

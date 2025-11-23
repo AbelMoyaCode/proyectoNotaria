@@ -121,7 +121,7 @@ class HomeFragment : Fragment() {
                         // Configurar botón Ver Detalles para navegar a MisCitasActivity
                         btnVerDetalles?.setOnClickListener {
                             Log.d(TAG, "📄 Navegando a detalles de cita ID: ${citaProxima.id}")
-                            val intent = Intent(requireContext(), MisCitasActivity::class.java)
+                            val intent = Intent(requireContext(), DetalleMiCitaActivity::class.java)
                             intent.putExtra("CITA_ID", citaProxima.id)
                             startActivity(intent)
                         }

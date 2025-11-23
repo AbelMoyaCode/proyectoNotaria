@@ -26,7 +26,7 @@
                 android:layout_height="40dp"
                 android:background="?attr/selectableItemBackgroundBorderless"
                 android:contentDescription="Volver"
-                android:tint="@color/white"
+                app:tint="@color/white"
                 android:src="@android:drawable/ic_menu_close_clear_cancel" />
 
             <TextView

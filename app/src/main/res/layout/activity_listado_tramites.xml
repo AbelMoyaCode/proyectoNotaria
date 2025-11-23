@@ -21,24 +21,15 @@
         android:gravity="center_vertical"
         android:elevation="4dp">
 
-        <ImageButton
-            android:id="@+id/buttonVolver"
-            android:layout_width="48dp"
-            android:layout_height="48dp"
-            android:src="@android:drawable/ic_menu_revert"
-            android:background="?attr/selectableItemBackgroundBorderless"
-            android:tint="@color/white"
-            android:contentDescription="Volver"/>
-
         <TextView
-            android:layout_width="0dp"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_weight="1"
             android:text="Trámites Disponibles"
             android:textColor="@color/white"
             android:textSize="20sp"
             android:textStyle="bold"
-            android:layout_marginStart="8dp"/>
+            android:gravity="center"/>
+            
     </LinearLayout>
 
     <!-- Campo de búsqueda -->
@@ -59,19 +50,19 @@
             android:hint="Buscar trámite..."
             android:inputType="text"
             android:maxLines="1"
+            android:minHeight="48dp"
             android:paddingStart="12dp"
             android:paddingEnd="12dp"
             android:textColorHint="@color/colorPrimary"
             android:background="@android:color/transparent"/>
 
-        <ImageButton
+        <ImageView
             android:id="@+id/buttonBuscar"
             android:layout_width="48dp"
             android:layout_height="48dp"
             android:src="@android:drawable/ic_menu_search"
-            android:background="?attr/selectableItemBackgroundBorderless"
-            android:tint="@color/colorPrimary"
-            android:contentDescription="Buscar"/>
+            app:tint="@color/colorPrimary"
+            android:contentDescription="Icono de búsqueda"/>
     </LinearLayout>
 
     <!-- Lista de trámites -->
