@@ -10,7 +10,7 @@ data class Notificacion(
     val id: Int,
 
     @SerializedName("tipo")
-    val tipo: String, // "CONFIRMACION", "REPROGRAMACION", "RECORDATORIO", "CANCELACION"
+    val tipo: String, // "CONFIRMACION", "REPROGRAMACION", "RECORDATORIO", "CANCELACION", "ACTUALIZACION"
 
     @SerializedName("titulo")
     val titulo: String,
@@ -32,6 +32,7 @@ data class Notificacion(
         const val TIPO_REPROGRAMACION = "REPROGRAMACION"
         const val TIPO_RECORDATORIO = "RECORDATORIO"
         const val TIPO_CANCELACION = "CANCELACION"
+        const val TIPO_ACTUALIZACION = "ACTUALIZACION" // <-- ¡NUEVO!
     }
 
     fun getIcono(): String {
@@ -40,6 +41,7 @@ data class Notificacion(
             TIPO_REPROGRAMACION -> "🔄"
             TIPO_RECORDATORIO -> "⏰"
             TIPO_CANCELACION -> "❌"
+            TIPO_ACTUALIZACION -> "📝" // <-- ¡NUEVO!
             else -> "📢"
         }
     }

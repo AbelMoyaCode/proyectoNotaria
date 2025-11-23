@@ -6,7 +6,6 @@ import android.util.Log
 import android.view.View
 import android.widget.Button
 import android.widget.CalendarView
-import android.widget.ImageButton
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
@@ -98,7 +97,6 @@ class AgendarCitaActivity : AppCompatActivity() {
         textViewSinHorarios = findViewById(R.id.textViewSinHorarios)
         buttonConfirmar = findViewById(R.id.buttonConfirmar)
 
-        findViewById<ImageButton>(R.id.buttonVolver).setOnClickListener { finish() }
         findViewById<Button>(R.id.buttonCancelar).setOnClickListener { finish() }
 
         recyclerViewHorarios.layoutManager = GridLayoutManager(this, 3)

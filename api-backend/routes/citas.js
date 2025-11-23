@@ -186,12 +186,43 @@ router.patch('/:id/reprogramar', async (req, res) => {
     }
 });
 
-
 /**
  * PATCH /api/citas/:id/cancelar
  */
 router.patch('/:id/cancelar', async (req, res) => {
-    // Código existente para cancelar
+    const client = await require('../config/database').pool.connect();
+    const { id } = req.params;
+    const { motivo } = req.body;
+
+    try {
+        await client.query('BEGIN');
+
+        // 1. Obtener el horario_id de la cita a cancelar
+        const cita = await client.query('SELECT horario_id FROM citas WHERE id = $1', [id]);
+        if (cita.rows.length === 0) {
+            throw new Error('La cita a cancelar no existe.');
+        }
+        const horarioId = cita.rows[0].horario_id;
+
+        // 2. Liberar el horario
+        await client.query('UPDATE horarios_disponibles SET disponible = TRUE WHERE id = $1', [horarioId]);
+
+        // 3. Actualizar el estado de la cita a CANCELADO
+        const citaCancelada = await client.query(
+            'UPDATE citas SET estado = \'CANCELADO\', motivo_cancelacion = $1 WHERE id = $2 RETURNING *',
+            [motivo, id]
+        );
+        
+        await client.query('COMMIT');
+
+        res.json({ success: true, mensaje: 'Cita cancelada exitosamente.', data: citaCancelada.rows[0] });
+
+    } catch (error) {
+        await client.query('ROLLBACK');
+        res.status(500).json({ success: false, mensaje: 'Error al cancelar la cita.', error: error.message });
+    } finally {
+        client.release();
+    }
 });
 
 /**

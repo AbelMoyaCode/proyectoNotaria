@@ -21,24 +21,14 @@
             android:gravity="center_vertical"
             android:elevation="4dp">
 
-            <ImageButton
-                android:id="@+id/buttonVolver"
-                android:layout_width="48dp"
-                android:layout_height="48dp"
-                android:src="@android:drawable/ic_menu_revert"
-                android:background="?attr/selectableItemBackgroundBorderless"
-                app:tint="@color/white"
-                android:contentDescription="Volver"/>
-
             <TextView
-                android:layout_width="0dp"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_weight="1"
                 android:text="Agendar Cita"
                 android:textColor="@color/white"
                 android:textSize="20sp"
                 android:textStyle="bold"
-                android:layout_marginStart="8dp"/>
+                android:gravity="center"/>
         </LinearLayout>
 
         <!-- Información del trámite -->

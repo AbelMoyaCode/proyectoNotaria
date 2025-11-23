@@ -153,6 +153,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="Reprogramar Cita"
+                android:backgroundTint="#1adb8e"
                 android:layout_marginTop="16dp"
                 android:enabled="false" />
 

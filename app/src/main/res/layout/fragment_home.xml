@@ -191,7 +191,7 @@
 
         </GridLayout>
 
-        <!-- Notificaciones recientes (DINÁMICAS) -->
+        <!-- Notificaciones recientes -->
         <LinearLayout
             android:id="@+id/contenedorNotificaciones"
             android:layout_width="match_parent"
@@ -208,7 +208,17 @@
                 android:textColor="@color/black"
                 android:layout_marginBottom="16dp"/>
 
-            <!-- RecyclerView para notificaciones dinámicas -->
+            <!-- Mensaje de lista vacía -->
+            <TextView
+                android:id="@+id/textViewSinNotificaciones"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Aún no tienes trámites iniciados. ¡Inicia tu primer trámite para ver sus actualizaciones aquí!"
+                android:gravity="center"
+                android:visibility="gone"
+                android:layout_marginTop="16dp"/>
+
+            <!-- RecyclerView para notificaciones -->
             <androidx.recyclerview.widget.RecyclerView
                 android:id="@+id/recyclerViewNotificaciones"
                 android:layout_width="match_parent"
