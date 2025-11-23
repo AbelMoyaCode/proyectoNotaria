@@ -113,7 +113,7 @@ router.get('/:id', async (req, res) => {
   try {
     const { id } = req.params;
     const resultado = await query(
-      `SELECT c.id, c.tramite_usuario_id, c.estado, hd.fecha, hd.hora, t.nombre as tramite_nombre, t.descripcion as tramite_descripcion, t.requisitos as tramite_requisitos, t.precio, c.observaciones, c.creada_en FROM citas c JOIN horarios_disponibles hd ON hd.id = c.horario_id JOIN tramites_usuarios tu ON tu.id = c.tramite_usuario_id JOIN tramites t ON t.codigo = tu.tramite_codigo WHERE c.id = $1`,
+      `SELECT c.id, t.codigo as tramite_codigo, c.tramite_usuario_id, c.estado, hd.fecha, hd.hora, t.nombre as tramite_nombre, t.descripcion as tramite_descripcion, t.requisitos as tramite_requisitos, t.precio, c.observaciones, c.creada_en FROM citas c JOIN horarios_disponibles hd ON hd.id = c.horario_id JOIN tramites_usuarios tu ON tu.id = c.tramite_usuario_id JOIN tramites t ON t.codigo = tu.tramite_codigo WHERE c.id = $1`,
       [id]
     );
     if (resultado.rows.length === 0) {
@@ -130,8 +130,62 @@ router.get('/:id', async (req, res) => {
  * PATCH /api/citas/:id/reprogramar
  */
 router.patch('/:id/reprogramar', async (req, res) => {
-    // Código existente para reprogramar
+    const client = await require('../config/database').pool.connect();
+    const { id } = req.params;
+    const { fecha, hora } = req.body;
+
+    if (!fecha || !hora) {
+        return res.status(400).json({ success: false, mensaje: 'Se requiere nueva fecha y hora.' });
+    }
+
+    try {
+        await client.query('BEGIN');
+
+        // 1. Obtener el horario_id ANTERIOR de la cita
+        const citaAnterior = await client.query('SELECT horario_id FROM citas WHERE id = $1', [id]);
+        if (citaAnterior.rows.length === 0) {
+            throw new Error('La cita a reprogramar no existe.');
+        }
+        const horarioIdAnterior = citaAnterior.rows[0].horario_id;
+
+        // 2. Liberar el horario ANTERIOR
+        await client.query('UPDATE horarios_disponibles SET disponible = TRUE WHERE id = $1', [horarioIdAnterior]);
+
+        // 3. Buscar o crear el NUEVO horario y ocuparlo
+        let nuevoHorario = await client.query('SELECT id, disponible FROM horarios_disponibles WHERE fecha = $1 AND hora = $2', [fecha, hora]);
+        let nuevoHorarioId;
+
+        if (nuevoHorario.rows.length === 0) {
+            // Si no existe, lo creamos
+            const horarioInsertado = await client.query('INSERT INTO horarios_disponibles (fecha, hora, disponible) VALUES ($1, $2, FALSE) RETURNING id', [fecha, hora]);
+            nuevoHorarioId = horarioInsertado.rows[0].id;
+        } else {
+            // Si ya existe, verificamos que esté disponible
+            if (!nuevoHorario.rows[0].disponible) {
+                throw new Error('El nuevo horario seleccionado ya no está disponible.');
+            }
+            nuevoHorarioId = nuevoHorario.rows[0].id;
+            await client.query('UPDATE horarios_disponibles SET disponible = FALSE WHERE id = $1', [nuevoHorarioId]);
+        }
+
+        // 4. Actualizar la cita con el nuevo horario_id
+        const citaActualizada = await client.query(
+            'UPDATE citas SET horario_id = $1, estado = \'AGENDADO\' WHERE id = $2 RETURNING *',
+            [nuevoHorarioId, id]
+        );
+
+        await client.query('COMMIT');
+
+        res.json({ success: true, mensaje: 'Cita reprogramada exitosamente.', data: citaActualizada.rows[0] });
+
+    } catch (error) {
+        await client.query('ROLLBACK');
+        res.status(500).json({ success: false, mensaje: 'Error al reprogramar la cita.', error: error.message });
+    } finally {
+        client.release();
+    }
 });
+
 
 /**
  * PATCH /api/citas/:id/cancelar

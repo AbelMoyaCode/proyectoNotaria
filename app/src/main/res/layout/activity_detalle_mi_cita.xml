@@ -20,24 +20,14 @@
             android:elevation="2dp"
             android:gravity="center_vertical">
 
-            <ImageButton
-                android:id="@+id/buttonVolver"
-                android:layout_width="40dp"
-                android:layout_height="40dp"
-                android:background="?attr/selectableItemBackgroundBorderless"
-                android:contentDescription="Volver"
-                android:tint="@color/white"
-                android:src="@android:drawable/ic_menu_close_clear_cancel" />
-
             <TextView
-                android:layout_width="0dp"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="Detalle de Mi Trámite"
+                android:text="Detalle de Mi Cita"
                 android:textSize="18sp"
                 android:textStyle="bold"
                 android:textColor="@color/white"
-                android:layout_marginStart="8dp" />
+                android:gravity="center" />
         </LinearLayout>
 
         <!-- Contenido principal -->
@@ -156,6 +146,15 @@
                 android:textColor="#555555"
                 android:lineSpacingExtra="4dp"
                 android:paddingBottom="20dp" />
+
+            <!-- Botón de Reprogramar -->
+            <Button
+                android:id="@+id/buttonReprogramarCita"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Reprogramar Cita"
+                android:layout_marginTop="16dp"
+                android:enabled="false" />
 
         </LinearLayout>
     </LinearLayout>

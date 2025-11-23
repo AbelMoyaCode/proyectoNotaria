@@ -41,6 +41,11 @@ class AgendarCitaActivity : AppCompatActivity() {
     private var fechaSeleccionada: String? = null
     private var horarioSeleccionado: String? = null
 
+    // Modo de operación
+    private var modoReprogramacion = false
+    private var citaIdReprogramar: Int = -1
+    private var fechaActualCita: String? = null
+
     private val horariosDisponibles = listOf(
         "08:00", "08:30", "09:00", "09:30", "10:00", "10:30", "11:00", "11:30",
         "12:00", "12:30", "13:00", "13:30", "14:00", "14:30", "15:00", "15:30",
@@ -57,6 +62,13 @@ class AgendarCitaActivity : AppCompatActivity() {
             Toast.makeText(this, "Debe iniciar sesión", Toast.LENGTH_SHORT).show()
             finish()
             return
+        }
+
+        // Detectar si estamos en modo de reprogramación
+        modoReprogramacion = intent.getBooleanExtra("MODO_REPROGRAMACION", false)
+        if (modoReprogramacion) {
+            citaIdReprogramar = intent.getIntExtra("CITA_ID_REPROGRAMAR", -1)
+            fechaActualCita = intent.getStringExtra("FECHA_ACTUAL")
         }
 
         // Recibir datos del trámite
@@ -100,6 +112,20 @@ class AgendarCitaActivity : AppCompatActivity() {
 
     private fun configurarCalendario() {
         val calendario = Calendar.getInstance()
+
+        // Si estamos reprogramando, posicionar el calendario en la fecha de la cita
+        if (modoReprogramacion && fechaActualCita != null) {
+            try {
+                val formatoFecha = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+                val fecha = formatoFecha.parse(fechaActualCita!!)
+                if (fecha != null) {
+                    calendarView.date = fecha.time
+                }
+            } catch (e: Exception) {
+                // Si falla, no hacer nada, el calendario se mostrará en la fecha de hoy
+            }
+        }
+
         calendarView.minDate = calendario.timeInMillis
         calendario.add(Calendar.MONTH, 2)
         calendarView.maxDate = calendario.timeInMillis
@@ -134,26 +160,35 @@ class AgendarCitaActivity : AppCompatActivity() {
         buttonConfirmar.isEnabled = false
         buttonConfirmar.setOnClickListener {
             if (fechaSeleccionada == null || horarioSeleccionado == null) {
-                Toast.makeText(this, "⚠️ Debe seleccionar fecha y horario", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, "⚠️ Debe seleccionar una nueva fecha y horario", Toast.LENGTH_SHORT).show()
                 return@setOnClickListener
             }
 
-            Log.d("AgendarCita", "Navegando a pantalla de confirmación...")
+            if (modoReprogramacion) {
+                // NAVEGAR A LA NUEVA PANTALLA DE CONFIRMACIÓN DE CAMBIO
+                Log.d("AgendarCita", "Modo Reprogramación: Navegando a ConfirmacionCambioActivity")
+                val intent = Intent(this, ConfirmacionCambioActivity::class.java).apply {
+                    putExtra("CITA_ID_REPROGRAMAR", citaIdReprogramar)
+                    putExtra("NUEVA_FECHA", fechaSeleccionada)
+                    putExtra("NUEVO_HORARIO", horarioSeleccionado)
+                }
+                startActivity(intent)
 
-            // Añadir esta activity a la lista para cerrarla después
-            DetalleTramiteActivity.activityList.add(this)
-
-            // Navegar a la pantalla de confirmación, pasando todos los datos
-            val intent = Intent(this, ConfirmacionCitaActivity::class.java).apply {
-                putExtra("TRAMITE_CODIGO", tramiteCodigo)
-                putExtra("TRAMITE_NOMBRE", tramiteNombre)
-                putExtra("TRAMITE_DESCRIPCION", tramiteDescripcion)
-                putExtra("TRAMITE_REQUISITOS", tramiteRequisitos)
-                putExtra("TRAMITE_PRECIO", tramitePrecio)
-                putExtra("FECHA", fechaSeleccionada)
-                putExtra("HORARIO", horarioSeleccionado)
+            } else {
+                // FLUJO NORMAL: NAVEGAR A LA CONFIRMACIÓN DE CITA ORIGINAL
+                Log.d("AgendarCita", "Modo Normal: Navegando a ConfirmacionCitaActivity")
+                DetalleTramiteActivity.activityList.add(this) // Mantener el cierre en cadena
+                val intent = Intent(this, ConfirmacionCitaActivity::class.java).apply {
+                    putExtra("TRAMITE_CODIGO", tramiteCodigo)
+                    putExtra("TRAMITE_NOMBRE", tramiteNombre)
+                    putExtra("TRAMITE_DESCRIPCION", tramiteDescripcion)
+                    putExtra("TRAMITE_REQUISITOS", tramiteRequisitos)
+                    putExtra("TRAMITE_PRECIO", tramitePrecio)
+                    putExtra("FECHA", fechaSeleccionada)
+                    putExtra("HORARIO", horarioSeleccionado)
+                }
+                startActivity(intent)
             }
-            startActivity(intent)
         }
     }
 }

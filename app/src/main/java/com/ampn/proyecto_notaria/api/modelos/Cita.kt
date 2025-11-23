@@ -80,19 +80,21 @@ data class CitaResponse(
     @SerializedName("tramite_descripcion")
     val tramiteDescripcion: String? = null,
 
-    // --- ¡CAMPOS AÑADIDOS! ---
     @SerializedName("tramite_requisitos")
     val tramiteRequisitos: String? = null,
 
     @SerializedName("observaciones")
     val observaciones: String? = null,
-    // -------------------------
 
     @SerializedName("precio")
     val precio: Double,
 
     @SerializedName("creada_en")
-    val creadaEn: String? = null
+    val creadaEn: String? = null,
+
+    // Campo añadido para la reprogramación
+    @SerializedName("tramite_codigo")
+    val tramiteCodigo: String?
 )
 
 /**

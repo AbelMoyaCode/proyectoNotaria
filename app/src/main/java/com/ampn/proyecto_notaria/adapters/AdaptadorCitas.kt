@@ -8,6 +8,8 @@ import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import com.ampn.proyecto_notaria.R
 import com.ampn.proyecto_notaria.api.modelos.CitaResponse
+import java.text.SimpleDateFormat
+import java.util.Locale
 
 class AdaptadorCitas(
     private var citas: List<CitaResponse>,
@@ -31,6 +33,18 @@ class AdaptadorCitas(
         notifyDataSetChanged()
     }
 
+    // Función para formatear la fecha
+    private fun formatarFecha(fechaISO: String): String {
+        return try {
+            val formatoEntrada = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.getDefault())
+            val formatoSalida = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
+            val fecha = formatoEntrada.parse(fechaISO)
+            if (fecha != null) formatoSalida.format(fecha) else fechaISO
+        } catch (e: Exception) {
+            fechaISO // Si falla, devolver la fecha original
+        }
+    }
+
     inner class CitaViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         private val textViewTramiteNombre: TextView = itemView.findViewById(R.id.textViewTramiteNombre)
         private val textViewFecha: TextView = itemView.findViewById(R.id.textViewFecha)
@@ -41,7 +55,7 @@ class AdaptadorCitas(
 
         fun bind(cita: CitaResponse) {
             textViewTramiteNombre.text = cita.tramiteNombre
-            textViewFecha.text = "Fecha: ${cita.fecha}"
+            textViewFecha.text = "Fecha: ${formatarFecha(cita.fecha)}" // Usar la nueva función
             textViewHora.text = "Hora: ${cita.hora}"
             textViewEstado.text = "Estado: ${cita.estado}"
 

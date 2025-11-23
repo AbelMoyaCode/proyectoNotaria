@@ -68,7 +68,13 @@
             android:name=".control.DetalleMiCitaActivity"
             android:parentActivityName=".control.MisCitasActivity"
             android:noHistory="false" />
-            
+
+        <!-- HU-09: Reprogramar Cita -->
+        <activity
+            android:name=".control.ConfirmacionCambioActivity"
+            android:parentActivityName=".control.AgendarCitaActivity"
+            android:noHistory="false" />
+
     </application>
 
 </manifest>
