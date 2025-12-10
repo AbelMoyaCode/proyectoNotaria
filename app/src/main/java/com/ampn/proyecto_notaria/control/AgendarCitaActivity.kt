@@ -100,6 +100,12 @@ class AgendarCitaActivity : AppCompatActivity() {
         findViewById<Button>(R.id.buttonCancelar).setOnClickListener { finish() }
 
         recyclerViewHorarios.layoutManager = GridLayoutManager(this, 3)
+
+        // Cambiar título y botón si es modo reprogramación
+        if (modoReprogramacion) {
+            findViewById<TextView>(R.id.textViewTituloPantalla).text = "Reprogramar Cita"
+            buttonConfirmar.text = "Confirmar Cambio"
+        }
     }
 
     private fun mostrarInformacionTramite() {

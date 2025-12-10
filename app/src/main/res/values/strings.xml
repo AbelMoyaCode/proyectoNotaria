@@ -1,3 +1,6 @@
 <resources>
-    <string name="app_name">Proyecto_Notaria</string>
+    <string name="app_name">TramiNotar</string>
+    <string name="app_slogan">Tu notaría de confianza, ahora en tu bolsillo.</string>
+    <string name="btn_iniciar_sesion">Iniciar sesión</string>
+    <string name="btn_crear_cuenta">Crear cuenta</string>
 </resources>
